@@ -18,7 +18,7 @@ if(a!=b){
 	}
 
     while(c >= 9){
-        s = a + m * v / e - g;
+        d = a + m * n / c - d;
         dsa = daa + cd;
         c++;
     }
@@ -28,4 +28,4 @@ else
 {
     a++;
     b--;
-} ;
+} 

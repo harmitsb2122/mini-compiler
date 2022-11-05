@@ -1,11 +1,13 @@
-while(1)
 {
-  if(a == 9)
-  {
-   a = b|c;
-  }
-  else
-  {
-   a--;
-  }
-} ;
+  int a ;
+  int x , y ;
+  float c ;
+  struct {
+    int a ;
+    int b ;
+  };
+  struct {
+    char n;
+    int m[10];
+  } name;
+}

@@ -51,8 +51,12 @@
   int base_address = 0;
   int offset = 1;
   int struct_offset = 1;
+  char temp_store[50];
   void init();
   void insert();
+  bool typecheckStruct(char* type,char* data);
+  bool redeclarationStruct(char* type,char* data);
+  bool missingdeclarationStruct(char* data);
   bool typecheck(char* type,char* data);
   bool redeclaration(char* type,char* data);
   bool missingdeclaration(char* data);
@@ -129,7 +133,9 @@
 
 %%
 
-start : {init();} 
+start : {
+          init();
+        } 
         slst { 
               if(error_status)
               {
@@ -247,6 +253,7 @@ STMT : VAR_DEC ';'
                     }
      | ID ASSIGN AFTER ';' {
 
+                              // print_table();                        
                               if(missingdeclaration($1))
                               {
                                 printf( "error : var '%s' is not declared in the scope\n",$1);
@@ -254,45 +261,46 @@ STMT : VAR_DEC ';'
                               else
                               {
                                 printf("%s = %s",$$,$3);
-                              }                             
+                              }     
                            }
      | PRE ';'
      ;
 
 
-VAR_DEC : TYPE NEXT   { 
+VAR_DEC : TYPE {strcpy(temp_store,$1);} REP ; 
+REP     :  REP ',' NEXT      { 
                                   // printf("%s\n",$2);
-                                bool check1 = typecheck($1,$2);
-                                bool check2 = redeclaration($1,$2);
+                                bool check1 = typecheck(temp_store,$3);
+                                bool check2 = redeclaration(temp_store,$3);
                                 if(check1)
                                 {
-                                  printf("error : conflicting types for '%s'\n",$2);
+                                  printf("error : conflicting types for '%s'\n",$3);
                                 }
                                 else if(check2)
                                 {
-                                  printf("error : redeclaration of '%s'\n",$2);
+                                  printf("error : redeclaration of '%s'\n",$3);
                                 }
                                 else
                                 {
-                                  strcpy(variable[var_idx].type,$1);
-                                  strcpy(variable[var_idx].vname,$2);
-                                  if(!strcmp($1,"int"))
+                                  strcpy(variable[var_idx].type,temp_store);
+                                  strcpy(variable[var_idx].vname,$3);
+                                  if(!strcmp(temp_store,"int"))
                                   {
                                     offset*=4;
                                   }
-                                  else if(!strcmp($1,"float"))
+                                  else if(!strcmp(temp_store,"float"))
                                   {
                                     offset*=4;
                                   }
-                                  else if(!strcmp($1,"char"))
+                                  else if(!strcmp(temp_store,"char"))
                                   {
                                     offset*=1;
                                   }
-                                  else if(!strcmp($1,"pointer"))
+                                  else if(!strcmp(temp_store,"pointer"))
                                   {
                                     offset*=4;
                                   }
-                                  else if(!strcmp($1,"struct"))
+                                  else if(!strcmp(temp_store,"struct"))
                                   {
                                     offset*=1;
                                   } 
@@ -304,45 +312,45 @@ VAR_DEC : TYPE NEXT   {
                                   base_address+=offset;
                                   offset = 1;
                                   insert(&variable[var_idx-1]);
-                                  printf("%s ",$2);
-                                  printf("%s ",$1);
+                                  printf("%s ",$3);
+                                  printf("%s ",temp_store);
                                   printf("%d\n",cur_size);
                                 }
                                 // print_table();
                               }
-        | TYPE NEXT ASSIGN ANY {
-                                  bool check1 = typecheck($1,$2);
-                                  bool check2 = redeclaration($1,$2);
+        | REP ',' NEXT ASSIGN ANY  {
+                                  bool check1 = typecheck(temp_store,$3);
+                                  bool check2 = redeclaration(temp_store,$3);
                                   if(check1)
                                   {
-                                    printf("error : conflicting types for '%s'\n",$2);
+                                    printf("error : conflicting types for '%s'\n",$3);
                                   }
                                   else if(check2)
                                   {
-                                    printf("error : redeclaration of '%s'\n",$2);
+                                    printf("error : redeclaration of '%s'\n",$3);
                                   }
                                   else
                                   {
-                                    printf("%s = %s\n",$2,$4);
-                                    strcpy(variable[var_idx].type,$1);
-                                    strcpy(variable[var_idx].vname,$2);
-                                    if(!strcmp($1,"int"))
+                                    printf("%s = %s\n",$3,$5);
+                                    strcpy(variable[var_idx].type,temp_store);
+                                    strcpy(variable[var_idx].vname,$3);
+                                    if(!strcmp(temp_store,"int"))
                                     {
                                       offset*=4;
                                     }
-                                    else if(!strcmp($1,"float"))
+                                    else if(!strcmp(temp_store,"float"))
                                     {
                                       offset*=4;
                                     }
-                                    else if(!strcmp($1,"char"))
+                                    else if(!strcmp(temp_store,"char"))
                                     {
                                       offset*=1;
                                     }
-                                    else if(!strcmp($1,"pointer"))
+                                    else if(!strcmp(temp_store,"pointer"))
                                     {
                                       offset*=4;
                                     } 
-                                    else if(!strcmp($1,"struct"))
+                                    else if(!strcmp(temp_store,"struct"))
                                     {
                                       offset*=1;
                                     } 
@@ -354,11 +362,111 @@ VAR_DEC : TYPE NEXT   {
                                     base_address+=offset;
                                     offset = 1;
                                     insert(&variable[var_idx-1]);
-                                    printf("%s ",$2);
-                                    printf("%s ",$1);
+                                    printf("%s ",$3);
+                                    printf("%s ",temp_store);
                                     printf("%d\n",cur_size);
                                   }
-                               };
+                               }
+          | NEXT  { 
+                                  // printf("%s\n",$2);
+                                bool check1 = typecheck(temp_store,$1);
+                                bool check2 = redeclaration(temp_store,$1);
+                                if(check1)
+                                {
+                                  printf("error : conflicting types for '%s'\n",$1);
+                                }
+                                else if(check2)
+                                {
+                                  printf("error : redeclaration of '%s'\n",$1);
+                                }
+                                else
+                                {
+                                  strcpy(variable[var_idx].type,temp_store);
+                                  strcpy(variable[var_idx].vname,$1);
+                                  if(!strcmp(temp_store,"int"))
+                                  {
+                                    offset*=4;
+                                  }
+                                  else if(!strcmp(temp_store,"float"))
+                                  {
+                                    offset*=4;
+                                  }
+                                  else if(!strcmp(temp_store,"char"))
+                                  {
+                                    offset*=1;
+                                  }
+                                  else if(!strcmp(temp_store,"pointer"))
+                                  {
+                                    offset*=4;
+                                  }
+                                  else if(!strcmp(temp_store,"struct"))
+                                  {
+                                    offset*=1;
+                                  } 
+                                  // printf("%d ",base_address);
+                                  printf("0x%04x ", base_address);
+                                  variable[var_idx].addr = base_address;
+                                  int cur_size = offset;
+                                  variable[var_idx++].size = offset;
+                                  base_address+=offset;
+                                  offset = 1;
+                                  insert(&variable[var_idx-1]);
+                                  printf("%s ",$1);
+                                  printf("%s ",temp_store);
+                                  printf("%d\n",cur_size);
+                                }
+                                // print_table();
+                              }
+          | NEXT ASSIGN ANY {
+                                  bool check1 = typecheck(temp_store,$1);
+                                  bool check2 = redeclaration(temp_store,$1);
+                                  if(check1)
+                                  {
+                                    printf("error : conflicting types for '%s'\n",$1);
+                                  }
+                                  else if(check2)
+                                  {
+                                    printf("error : redeclaration of '%s'\n",$1);
+                                  }
+                                  else
+                                  {
+                                    printf("%s = %s\n",$1,$3);
+                                    strcpy(variable[var_idx].type,temp_store);
+                                    strcpy(variable[var_idx].vname,$1);
+                                    if(!strcmp(temp_store,"int"))
+                                    {
+                                      offset*=4;
+                                    }
+                                    else if(!strcmp(temp_store,"float"))
+                                    {
+                                      offset*=4;
+                                    }
+                                    else if(!strcmp(temp_store,"char"))
+                                    {
+                                      offset*=1;
+                                    }
+                                    else if(!strcmp(temp_store,"pointer"))
+                                    {
+                                      offset*=4;
+                                    } 
+                                    else if(!strcmp(temp_store,"struct"))
+                                    {
+                                      offset*=1;
+                                    } 
+                                    // printf("%d ",base_address);
+                                    printf("0x%04x ", base_address);
+                                    variable[var_idx].addr = base_address;
+                                    int cur_size = offset;
+                                    variable[var_idx++].size = offset;
+                                    base_address+=offset;
+                                    offset = 1;
+                                    insert(&variable[var_idx-1]);
+                                    printf("%s ",$1);
+                                    printf("%s ",temp_store);
+                                    printf("%d\n",cur_size);
+                                  }
+                               }
+              ;
 
 TYPE    : B {strcpy($$,$1);}
         | B PTRDEC {strcpy($$,"pointer");};
@@ -396,6 +504,7 @@ STRUCTDEC : STRUCT CRLOP  {
                   // print_table();
                   bool check1 = typecheck($1,$6);
                   bool check2 = redeclaration($1,$6);
+                  
                   if(check1)
                   {
                     printf("error : conflicting types for '%s'\n",$6);
@@ -418,24 +527,22 @@ STRUCTDEC : STRUCT CRLOP  {
                     printf("%s ",$1);
                     printf("%d\n",offset);
                     struct_variable[struct_var_idx].size = offset;
-                    int size = struct_variable[struct_var_idx].tab_sz;
-                    struct_variable[struct_var_idx].tables[size] = (&Table_Stack[table_idx-1]);
+                    insert_struct(&struct_variable[struct_var_idx]);
                     table_idx--;
-                    struct_variable[struct_var_idx].tab_sz++;
                     struct_var_idx++;
-                    insert_struct(&struct_variable[struct_var_idx-1]);
-                    offset = 1;                  
-                    print_table();
+                    offset = 1;                
                   }
                 }
             ; 
 
-OPTID : ID {strcpy($$,$1);}| {};
+OPTID : ID {
+              strcpy($$,$1);
+           }| {};
 
 INSSTR : TYPE NEXT  { 
                                   // printf("%s\n",$2);
-                                bool check1 = typecheck($1,$2);
-                                bool check2 = redeclaration($1,$2);
+                                bool check1 = typecheckStruct($1,$2);
+                                bool check2 = redeclarationStruct($1,$2);
                                 if(check1)
                                 {
                                   printf("error : conflicting types for '%s'\n",$2);
@@ -475,14 +582,19 @@ INSSTR : TYPE NEXT  {
                                   variable[var_idx++].size = offset;
                                   base_address+=offset;
                                   offset = 1;
-                                  insert(&variable[var_idx-1]);
+                                  // strcpy(struct_variable[struct_var_idx].vname,variable[var_idx-1].vname);
+                                  // strcpy(struct_variable[struct_var_idx].type,variable[var_idx-1].type);
+                                  // struct_variable[struct_var_idx].addr = variable[var_idx-1].addr;
+                                  int tab_sz = struct_variable[struct_var_idx].tab_sz;
+                                  struct_variable[struct_var_idx].tables[tab_sz] = (&variable[var_idx-1]);
+                                  struct_variable[struct_var_idx].tab_sz++;
                                   // printf("%s ",$2);
                                   // printf("%s ",$1);
                                   // printf("%d\n",cur_size);
                                 }
                                 // print_table();
                               }
-                    ';' INSSTR | {};
+                    ';' INSSTR | {/*print_table();*/};
 
 C       : ARROP NUM {offset*=atoi($2);} D;
 
@@ -590,7 +702,6 @@ ANY : NUM {
             {
               strcpy($$,generateVariable());
               printf("%s = %s\n",$$,$1);
-
             }
          }
     | TRUE {
@@ -660,6 +771,52 @@ void print_table()
   }
   printf(" ------------------------------------------------ \n");
 }
+
+//---------------- STRUCT CHECKING -------------------------
+bool typecheckStruct(char* type,char* data)
+{
+      int i = struct_var_idx;
+      int inner_size = struct_variable[i].tab_sz;
+      for(int j=0;j<inner_size;j++)
+      {
+        if(strcmp(struct_variable[i].tables[j]->type,type) && (!strcmp(struct_variable[i].tables[j]->vname,data)))
+        {
+          return error_status = true;
+        }
+      }
+    return false;
+}
+
+bool redeclarationStruct(char* type,char* data)
+{
+      int i = struct_var_idx;
+      int inner_size = struct_variable[i].tab_sz;
+      for(int j=0;j<inner_size;j++)
+      {
+        if((!strcmp(struct_variable[i].tables[j]->type,type)) && (!strcmp(struct_variable[i].tables[j]->vname,data)))
+        {
+          return error_status = true;
+        }
+      }
+      return false;
+}
+
+bool missingdeclarationStruct(char* data)
+{
+      int i = struct_var_idx;
+      int inner_size = struct_variable[i].tab_sz;
+      for(int j=0;j<inner_size;j++)
+      {
+        if(!strcmp(struct_variable[i].tables[j]->vname,data))
+        {
+          return false;
+        }
+      }
+    return error_status = true;
+}
+
+//----------------------------------------------------------
+
 bool typecheck(char* type,char* data)
 {
     for(int i=0;i<table_idx;i++)
@@ -681,7 +838,6 @@ bool typecheck(char* type,char* data)
         }
       }
     }
-
     return false;
 }
 
@@ -706,6 +862,7 @@ bool redeclaration(char* type,char* data)
       {
         if((!strcmp(Table_Stack[i]->struct_tables[j]->type,type)) && (!strcmp(Table_Stack[i]->struct_tables[j]->vname,data)))
         {
+          printf("128938912389123\n");
           return error_status = true;
         }
       }

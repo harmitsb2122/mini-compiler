@@ -11,7 +11,7 @@ struct
 struct
 {
 	int a;
-	char* a;
+	float* a;
 } name;
 char name;
 a = 7;

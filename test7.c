@@ -1,4 +1,5 @@
-float s;
-int x;
-int z[10][20];
-int y;
+{
+int a , b , c ;
+char e ;
+float pi = 3 ;
+}
