@@ -1,0 +1,22 @@
+Instructions
+
+Instructions to run
+
+- Open terminal
+- Type: make fname=<filename.l> .A file lexer would be created.
+- Type: ./lexer <inputfilename.txt> to generate the output
+- In case the .l file (to be executed) is updated, one has to type: make clean ,before executing the above commands.
+- input is the input file.
+
+Output convention :
+
+- Line no represents the line number (new block of code) which has been tested.
+
+Notes :
+
+- Labels are NOT HANDLED
+- Arithmetic expressions are HANDLED
+- while statements are HANDLED
+- nested while statements are HANDLED
+- relational operations are HANDLED
+- spaces are not handled
