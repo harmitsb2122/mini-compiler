@@ -3,20 +3,24 @@ Instructions
 Instructions to run
 
 - Open terminal
-- Type: make fname=<filename.l> .A file lexer would be created.
-- Type: ./lexer <inputfilename.txt> to generate the output
-- In case the .l file (to be executed) is updated, one has to type: make clean ,before executing the above commands.
-- input is the input file.
+- Type: make fname=<filename> .A file parser would be created.
+- Type: ./parser <inputfilename.txt> to generate the output
+- In case the .y file (to be executed) is updated, one has to type: make clean ,before executing the above commands.
+- input test cases are named as per the convention <testi.c> .
 
 Output convention :
 
 - Line no represents the line number (new block of code) which has been tested.
+- The TAC is generated during the parsing process and the subsequent errors are shown.
 
 Notes :
 
-- Labels are NOT HANDLED
+- Labels are HANDLED
 - Arithmetic expressions are HANDLED
 - while statements are HANDLED
 - nested while statements are HANDLED
-- relational operations are HANDLED
-- spaces are not handled
+- relational operations are HANDLED (Basic)
+- Basic declarations of variables with types arrays,integers,characters,floating points numbers and structs are HANDLED.
+- Scope checking is HANDLED.
+- Currently complex conditionals are NOT HANDLED.
+- typecasting is NOT HANDLED.
