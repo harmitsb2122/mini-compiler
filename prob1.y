@@ -349,6 +349,10 @@ COND2 : ANY CMP AFTER {
       | ID ASSIGN AFTER {
                         if(missingdeclaration($1))
                         {
+                          printf( "error : var '%s' is not declared in the scope\n",$1);
+                        }
+                        else
+                        {
                           strcpy($$,generateVariable());
                           char temp1[50];
                           char temp2[50];
@@ -363,6 +367,35 @@ COND2 : ANY CMP AFTER {
                           printf("%s :\n",temp3);
                         }
                       }
+      | LNOT ANY {
+                          strcpy($$,generateVariable());
+                          char temp1[50];
+                          char temp2[50];
+                          char temp3[50];
+                          strcpy(temp1,generateLabel());
+                          strcpy(temp2,generateLabel());
+                          strcpy(temp3,generateLabel());
+                          printf("if ! %s goto %s\n",$2,temp1);
+                          printf("goto %s\n",temp2);
+                          printf("%s :\n%s = 1\ngoto %s\n",temp1,$$,temp3);
+                          printf("%s :\n%s = 0\n",temp2,$$);
+                          printf("%s :\n",temp3);
+                   }
+      | LNOT ROP AFTER RCL{
+                            strcpy($$,generateVariable());
+                            char temp1[50];
+                            char temp2[50];
+                            char temp3[50];
+                            strcpy(temp1,generateLabel());
+                            strcpy(temp2,generateLabel());
+                            strcpy(temp3,generateLabel());
+                            printf("if ! %s goto %s\n",$3,temp1);
+                            printf("goto %s\n",temp2);
+                            printf("%s :\n%s = 1\ngoto %s\n",temp1,$$,temp3);
+                            printf("%s :\n%s = 0\n",temp2,$$);
+                            printf("%s :\n",temp3);
+                   }
+
       ;
 
 STMT : VAR_DEC ';'
