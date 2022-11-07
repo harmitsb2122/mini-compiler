@@ -22,5 +22,5 @@ Notes :
 - relational operations are HANDLED (Basic)
 - Basic declarations of variables with types arrays,integers,characters,floating points numbers and structs are HANDLED.
 - Scope checking is HANDLED.
-- Currently complex conditionals are NOT HANDLED.
-- typecasting is NOT HANDLED.
+- Currently complex conditionals are HANDLED.
+- typecasting is HANDLED.

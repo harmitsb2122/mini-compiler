@@ -22,6 +22,7 @@
   struct Node{
     char vname[50];
     char type[50];
+    char cur_type[50];
     int addr;
     int size;
   };
@@ -44,6 +45,7 @@
   struct TNode *Table_Stack[50];
   struct Node variable[1000];
   struct SNode struct_variable[1000];
+  int computation_type = -1;
   int var_idx = 0;
   int struct_var_idx = 0;
   struct TNode stack_node[50];
@@ -60,7 +62,20 @@
   bool typecheck(char* type,char* data);
   bool redeclaration(char* type,char* data);
   bool missingdeclaration(char* data);
+  bool update_cur_type(char* type,char* data);
   void print_table();
+  void reset_types();
+  int max(int a,int b)
+  {
+    if(a>=b)
+    {
+      return a;
+    }
+    else
+    {
+      return b;
+    }
+  }
 %}
 
 %union{
@@ -74,6 +89,7 @@
 %token<string> NEQ
 %token<string> LOR
 %token<string> LAND
+%token<string> LNOT
 %token<string> LTEQ
 %token<string> GTEQ
 %token<string> LT
@@ -91,17 +107,23 @@
 %token<string> STRUCT
 %token<string> INT
 %token<string> FLOAT
+%token<string> LONG
 %token<string> POINTER
 %token<string> CHAR
 %token<string> ARROP
 %token<string> ARRCL
 %token<string> CRLOP
 %token<string> CRLCL
+%token<string> ROP
+%token<string> RCL
 
 %type<string> E
 %type<string> ANY
 %type<string> CMP
 %type<string> COND
+%type<string> COND0
+%type<string> COND1
+%type<string> COND2
 %type<string> ASSIGN
 %type<string> AFTER
 %type<string> LATER
@@ -112,6 +134,7 @@
 %type<string> STRUCTDEC
 %type<string> INSSTR
 %type<string> OPTID
+%type<string> OPTYPE
 %type<string> TYPE
 %type<string> NEXT
 %type<string> ARRM
@@ -122,8 +145,8 @@
 %left '+' '-' 
 %left POINTER '/'
 %right AEQ
-%left LAND LOR
-%left LT GT LTEQ GTEQ EQ NEQ
+%left LT GT LTEQ GTEQ 
+%left LNOT LAND LOR
 %left ID
 %left INC DEC
 %right UMINUS
@@ -158,7 +181,7 @@ DUMMY : {char topp[50]; strcpy(topp,generateLabel()); pushout(topp); printf("%s 
 
 CONTROL : E1 | E2;
 
-E1   : WHILE '(' COND ')' 
+E1   : WHILE ROP COND RCL 
       CRLOP {
               // print_table(Table_Stack[table_idx-1]);
               init();
@@ -192,34 +215,160 @@ E2  : CRLOP {
           BODY
       CRLCL {table_idx--;};
 
-COND : ANY CMP AFTER {strcpy($$,generateLabel()); printf("if %s %s %s goto %s\n",$1,$2,$3,$$);
-                      pushin($$);
-                      strcpy($$,generateLabel()); printf("goto %s\n",$$);
-                      pushout($$);
+COND : COND0 {
+                strcpy($$,generateLabel()); printf("if %s!=0 goto %s\n",$1,$$);
+                pushin($$);
+                strcpy($$,generateLabel()); printf("goto %s\n",$$);
+                pushout($$);
+             }
+      | ANY {
+                    strcpy($$,generateLabel()); printf("if %s != 0 goto %s\n",$1,$$);
+                    pushin($$);
+                    strcpy($$,generateLabel()); printf("goto %s\n",$$);
+                    pushout($$);
+            };
+
+
+COND0 : COND0 LOR COND0 {
+                        strcpy($$,generateVariable());
+                        char temp1[50];
+                        char temp2[50];
+                        char temp3[50];
+                        strcpy(temp1,generateLabel());
+                        strcpy(temp2,generateLabel());
+                        strcpy(temp3,generateLabel());
+                        printf("if %s || %s goto %s\n",$1,$3,temp1);
+                        printf("goto %s\n",temp2);
+                        printf("%s :\n%s = 1\ngoto %s\n",temp1,$$,temp3);
+                        printf("%s :\n%s = 0\n",temp2,$$);
+                        printf("%s :\n",temp3);
+                     }
+      | COND0 LAND COND0 {
+                        strcpy($$,generateVariable());
+                        char temp1[50];
+                        char temp2[50];
+                        char temp3[50];
+                        strcpy(temp1,generateLabel());
+                        strcpy(temp2,generateLabel());
+                        strcpy(temp3,generateLabel());
+                        printf("if %s && %s goto %s\n",$1,$3,temp1);
+                        printf("goto %s\n",temp2);
+                        printf("%s :\n%s = 1\ngoto %s\n",temp1,$$,temp3);
+                        printf("%s :\n%s = 0\n",temp2,$$);
+                        printf("%s :\n",temp3);
+                     }
+      | LNOT COND0 {
+                        strcpy($$,generateVariable());
+                        char temp1[50];
+                        char temp2[50];
+                        char temp3[50];
+                        strcpy(temp1,generateLabel());
+                        strcpy(temp2,generateLabel());
+                        strcpy(temp3,generateLabel());
+                        printf("if !%s goto %s\n",$1,temp1);
+                        printf("goto %s\n",temp2);
+                        printf("%s :\n%s = 1\ngoto %s\n",temp1,$$,temp3);
+                        printf("%s :\n%s = 0\n",temp2,$$);
+                        printf("%s :\n",temp3);
+                     }
+      | COND1;
+
+COND1  : COND1 LT COND1 {    
+                        strcpy($$,generateVariable());
+                        char temp1[50];
+                        char temp2[50];
+                        char temp3[50];
+                        strcpy(temp1,generateLabel());
+                        strcpy(temp2,generateLabel());
+                        strcpy(temp3,generateLabel());
+                        printf("if %s < %s goto %s\n",$1,$3,temp1);
+                        printf("goto %s\n",temp2);
+                        printf("%s :\n%s = 1\ngoto %s\n",temp1,$$,temp3);
+                        printf("%s :\n%s = 0\n",temp2,$$);
+                        printf("%s :\n",temp3);
+                     }
+      | COND1 GT COND1 {
+                        strcpy($$,generateVariable());
+                        char temp1[50];
+                        char temp2[50];
+                        char temp3[50];
+                        strcpy(temp1,generateLabel());
+                        strcpy(temp2,generateLabel());
+                        strcpy(temp3,generateLabel());
+                        printf("if %s > %s goto %s\n",$1,$3,temp1);
+                        printf("goto %s\n",temp2);
+                        printf("%s :\n%s = 1\ngoto %s\n",temp1,$$,temp3);
+                        printf("%s :\n%s = 0\n",temp2,$$);
+                        printf("%s :\n",temp3);
+                     }
+      | COND1 LTEQ COND1 {
+                        strcpy($$,generateVariable());
+                        char temp1[50];
+                        char temp2[50];
+                        char temp3[50];
+                        strcpy(temp1,generateLabel());
+                        strcpy(temp2,generateLabel());
+                        strcpy(temp3,generateLabel());
+                        printf("if %s <= %s goto %s\n",$1,$3,temp1);
+                        printf("goto %s\n",temp2);
+                        printf("%s :\n%s = 1\ngoto %s\n",temp1,$$,temp3);
+                        printf("%s :\n%s = 0\n",temp2,$$);
+                        printf("%s :\n",temp3);
+                     }
+      | COND1 GTEQ COND1{
+                        strcpy($$,generateVariable());
+                        char temp1[50];
+                        char temp2[50];
+                        char temp3[50];
+                        strcpy(temp1,generateLabel());
+                        strcpy(temp2,generateLabel());
+                        strcpy(temp3,generateLabel());
+                        printf("if %s >= %s goto %s\n",$1,$3,temp1);
+                        printf("goto %s\n",temp2);
+                        printf("%s :\n%s = 1\ngoto %s\n",temp1,$$,temp3);
+                        printf("%s :\n%s = 0\n",temp2,$$);
+                        printf("%s :\n",temp3);
+                     }
+      | COND2
+      ;
+
+COND2 : ANY CMP AFTER {
+                        strcpy($$,generateVariable());
+                        char temp1[50];
+                        char temp2[50];
+                        char temp3[50];
+                        strcpy(temp1,generateLabel());
+                        strcpy(temp2,generateLabel());
+                        strcpy(temp3,generateLabel());
+                        printf("if %s %s %s goto %s\n",$1,$2,$3,temp1);
+                        printf("goto %s\n",temp2);
+                        printf("%s :\n%s = 1\ngoto %s\n",temp1,$$,temp3);
+                        printf("%s :\n%s = 0\n",temp2,$$);
+                        printf("%s :\n",temp3);
                       }
       | ID ASSIGN AFTER {
                         if(missingdeclaration($1))
                         {
-                          printf( "error : var '%s' is not declared in the scope\n",$1);
-                        }
-                        else
-                        {
-                          strcpy($$,generateLabel()); printf("if %s %s %s goto %s\n",$1,$2,$3,$$);
-                          pushin($$);
-                          strcpy($$,generateLabel()); printf("goto %s\n",$$);
-                          pushout($$);
+                          strcpy($$,generateVariable());
+                          char temp1[50];
+                          char temp2[50];
+                          char temp3[50];
+                          strcpy(temp1,generateLabel());
+                          strcpy(temp2,generateLabel());
+                          strcpy(temp3,generateLabel());
+                          printf("if %s %s %s goto %s\n",$1,$2,$3,temp1);
+                          printf("goto %s\n",temp2);
+                          printf("%s :\n%s = 1\ngoto %s\n",temp1,$$,temp3);
+                          printf("%s :\n%s = 0\n",temp2,$$);
+                          printf("%s :\n",temp3);
                         }
                       }
-      | ANY {strcpy($$,generateLabel()); printf("if %s != 0 goto %s\n",$1,$$);
-              pushin($$);
-             strcpy($$,generateLabel()); printf("goto %s\n",$$);
-              pushout($$);
-           };
+      ;
 
 STMT : VAR_DEC ';'
      | STRUCTDEC ';'
      | IF       
-      '(' 
+      ROP 
         COND  {
                 init();
                 char topp[50];
@@ -227,7 +376,7 @@ STMT : VAR_DEC ';'
                 topin=topin-1;
                 printf("%s :\n",topp);
               }
-      ')'
+      RCL
       CRLOP BODY CRLCL  {
                       char topp[50];
                       strcpy(topp,generateLabel());
@@ -260,8 +409,20 @@ STMT : VAR_DEC ';'
                               }
                               else
                               {
-                                printf("%s = %s",$$,$3);
+                                int id_type = get_cur_type($1);
+                                if(id_type < computation_type)
+                                {
+                                  printf( "error : the assignment for '%s' is not vaild\n",$1);
+                                  error_status = 1;
+                                }
+                                else
+                                {
+                                  printf("%s = %s",$$,$3);
+                                }
                               }     
+                              computation_type = -1;
+                              reset_types();
+                              // print_table();
                            }
      | PRE ';'
      ;
@@ -283,6 +444,7 @@ REP     :  REP ',' NEXT      {
                                 else
                                 {
                                   strcpy(variable[var_idx].type,temp_store);
+                                  strcpy(variable[var_idx].cur_type,temp_store);
                                   strcpy(variable[var_idx].vname,$3);
                                   if(!strcmp(temp_store,"int"))
                                   {
@@ -333,6 +495,7 @@ REP     :  REP ',' NEXT      {
                                   {
                                     printf("%s = %s\n",$3,$5);
                                     strcpy(variable[var_idx].type,temp_store);
+                                    strcpy(variable[var_idx].cur_type,temp_store);
                                     strcpy(variable[var_idx].vname,$3);
                                     if(!strcmp(temp_store,"int"))
                                     {
@@ -382,6 +545,7 @@ REP     :  REP ',' NEXT      {
                                 else
                                 {
                                   strcpy(variable[var_idx].type,temp_store);
+                                  strcpy(variable[var_idx].cur_type,temp_store);
                                   strcpy(variable[var_idx].vname,$1);
                                   if(!strcmp(temp_store,"int"))
                                   {
@@ -432,6 +596,7 @@ REP     :  REP ',' NEXT      {
                                   {
                                     printf("%s = %s\n",$1,$3);
                                     strcpy(variable[var_idx].type,temp_store);
+                                    strcpy(variable[var_idx].cur_type,temp_store);
                                     strcpy(variable[var_idx].vname,$1);
                                     if(!strcmp(temp_store,"int"))
                                     {
@@ -471,7 +636,7 @@ REP     :  REP ',' NEXT      {
 TYPE    : B {strcpy($$,$1);}
         | B PTRDEC {strcpy($$,"pointer");};
 
-B       : INT {strcpy($$,"int");}| FLOAT {strcpy($$,"float");}| CHAR {strcpy($$,"char");};
+B       : INT {strcpy($$,"int");}| FLOAT {strcpy($$,"float");}| CHAR {strcpy($$,"char");} | LONG {strcpy($$,"long");};
 
 NEXT    : ID {
                 strcpy($$,$1);
@@ -600,7 +765,41 @@ C       : ARROP NUM {offset*=atoi($2);} D;
 
 D       : ARRCL | ARRCL C;
 
+
 AFTER : AFTER '+' AFTER {
+                          // int a1 = get_cur_type($1);
+                          // int a2 = get_cur_type($3);
+                          // if( a1 >= a2)
+                          // {
+                          //   if(a1 == 1)
+                          //   {
+                          //     update_cur_type("int",$3);
+                          //   }
+                          //   if(a1 == 2)
+                          //   {
+                          //     update_cur_type("float",$3);
+                          //   }  
+                          //   if(a1 == 3)
+                          //   {
+                          //     update_cur_type("long",$3);
+                          //   }                            
+                          // }
+                          // else
+                          // {
+                          //   if(a2 == 1)
+                          //   {
+                          //     update_cur_type("int",$3);
+                          //   }
+                          //   if(a2 == 2)
+                          //   {
+                          //     update_cur_type("float",$3);
+                          //   }  
+                          //   if(a2 == 3)
+                          //   {
+                          //     update_cur_type("long",$3);
+                          //   }  
+                          // }
+                          // print_table1();
                           strcpy($$,generateVariable());
                           printf("%s = %s + %s\n",$$,$1,$3);
                         }
@@ -621,6 +820,7 @@ AFTER : AFTER '+' AFTER {
                           printf("%s = %s | %s\n",$$,$1,$3);
                         }
       | PRE {
+
               strcpy($$,generateVariable());
               printf("%s = %s\n",$$,$1);
             }
@@ -700,8 +900,24 @@ ANY : NUM {
             }
             else
             {
+              int a1 = get_cur_type($1);
+              computation_type = max(computation_type,a1);
               strcpy($$,generateVariable());
               printf("%s = %s\n",$$,$1);
+            }
+         }
+    | OPTYPE ID {
+            if(missingdeclaration($2))
+            {
+                printf( "error : var '%s' is not declared in the scope\n",$2);
+            }
+            else
+            {
+              strcpy($$,generateVariable());
+              printf("%s = %s\n",$$,$2);
+              update_cur_type($1,$2);
+              int a1 = get_cur_type($2);
+              computation_type = max(computation_type,a1);
             }
          }
     | TRUE {
@@ -712,6 +928,8 @@ ANY : NUM {
               strcpy($$,generateVariable());
               printf("%s = %s\n",$$,$1);
             };
+
+OPTYPE : ROP TYPE RCL {strcpy($$,$2);} ;
 
 CMP : EQ {strcpy($$,$1);}   
     | NEQ {strcpy($$,$1);}
@@ -770,6 +988,25 @@ void print_table()
     printf("%d\t |\n",Table_Stack[table_idx-1]->struct_tables[i]->size);
   }
   printf(" ------------------------------------------------ \n");
+}
+
+void print_table1()
+{
+  printf(" ----------------------------------------------------- \n");
+  printf("|               CURRENT SYMBOL TABLE                  |\n");
+  printf("| --------------------------------------------------- |\n");
+  printf("| var_name      type    cur type      address   size  |\n");
+  int sz = Table_Stack[table_idx-1]->size;
+  for(int i=0;i<sz;i++)
+  { 
+    printf("| ");
+    printf("%s\t\t",Table_Stack[table_idx-1]->tables[i]->vname);
+    printf("%s\t",Table_Stack[table_idx-1]->tables[i]->type);
+    printf("%s\t      ",Table_Stack[table_idx-1]->tables[i]->cur_type);
+    printf("%d\t\t",Table_Stack[table_idx-1]->tables[i]->addr);
+    printf("%d     |\n",Table_Stack[table_idx-1]->tables[i]->size);
+  }
+  printf(" ----------------------------------------------------- \n");
 }
 
 //---------------- STRUCT CHECKING -------------------------
@@ -862,7 +1099,7 @@ bool redeclaration(char* type,char* data)
       {
         if((!strcmp(Table_Stack[i]->struct_tables[j]->type,type)) && (!strcmp(Table_Stack[i]->struct_tables[j]->vname,data)))
         {
-          printf("128938912389123\n");
+          // printf("128938912389123\n");
           return error_status = true;
         }
       }
@@ -892,6 +1129,67 @@ bool missingdeclaration(char* data)
       }
     }
     return error_status = true;
+}
+
+bool update_cur_type(char* type,char* data)
+{
+    for(int i=0;i<table_idx;i++)
+    {
+      int inner_size = Table_Stack[i]->size;
+      for(int j=0;j<inner_size;j++)
+      {
+        if(!strcmp(Table_Stack[i]->tables[j]->vname,data))
+        {
+          strcpy(Table_Stack[i]->tables[j]->cur_type,type);
+          return true;
+        }
+      }
+    }
+    error_status = true;
+    return false;
+}
+
+int get_cur_type(char* data)
+{
+    for(int i=0;i<table_idx;i++)
+    {
+      int inner_size = Table_Stack[i]->size;
+      for(int j=0;j<inner_size;j++)
+      {
+        if(!strcmp(Table_Stack[i]->tables[j]->vname,data))
+        {
+          if(!strcmp(Table_Stack[i]->tables[j]->cur_type,"int"))
+          {
+            return 1;
+          }
+          if(!strcmp(Table_Stack[i]->tables[j]->cur_type,"float"))
+          {
+            return 2;
+          }
+          if(!strcmp(Table_Stack[i]->tables[j]->cur_type,"long"))
+          {
+            return 3;
+          }
+          if(!strcmp(Table_Stack[i]->tables[j]->cur_type,"char"))
+          {
+            return 0;
+          }
+        }
+      }
+    }
+    return -1;  
+}
+
+void reset_types()
+{
+    for(int i=0;i<table_idx;i++)
+    {
+      int inner_size = Table_Stack[i]->size;
+      for(int j=0;j<inner_size;j++)
+      {
+        strcpy(Table_Stack[i]->tables[j]->cur_type,Table_Stack[i]->tables[j]->type);
+      }
+    }  
 }
 
 void init()

@@ -91,6 +91,7 @@
   struct Node{
     char vname[50];
     char type[50];
+    char cur_type[50];
     int addr;
     int size;
   };
@@ -113,6 +114,7 @@
   struct TNode *Table_Stack[50];
   struct Node variable[1000];
   struct SNode struct_variable[1000];
+  int computation_type = -1;
   int var_idx = 0;
   int struct_var_idx = 0;
   struct TNode stack_node[50];
@@ -129,9 +131,22 @@
   bool typecheck(char* type,char* data);
   bool redeclaration(char* type,char* data);
   bool missingdeclaration(char* data);
+  bool update_cur_type(char* type,char* data);
   void print_table();
+  void reset_types();
+  int max(int a,int b)
+  {
+    if(a>=b)
+    {
+      return a;
+    }
+    else
+    {
+      return b;
+    }
+  }
 
-#line 135 "y.tab.c"
+#line 150 "y.tab.c"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -186,30 +201,34 @@ extern int yydebug;
     NEQ = 262,
     LOR = 263,
     LAND = 264,
-    LTEQ = 265,
-    GTEQ = 266,
-    LT = 267,
-    GT = 268,
-    XOR = 269,
-    BOR = 270,
-    BAND = 271,
-    AEQ = 272,
-    INC = 273,
-    DEC = 274,
-    NUM = 275,
-    ID = 276,
-    IF = 277,
-    ELSE = 278,
-    STRUCT = 279,
-    INT = 280,
-    FLOAT = 281,
-    POINTER = 282,
-    CHAR = 283,
-    ARROP = 284,
-    ARRCL = 285,
-    CRLOP = 286,
-    CRLCL = 287,
-    UMINUS = 288
+    LNOT = 265,
+    LTEQ = 266,
+    GTEQ = 267,
+    LT = 268,
+    GT = 269,
+    XOR = 270,
+    BOR = 271,
+    BAND = 272,
+    AEQ = 273,
+    INC = 274,
+    DEC = 275,
+    NUM = 276,
+    ID = 277,
+    IF = 278,
+    ELSE = 279,
+    STRUCT = 280,
+    INT = 281,
+    FLOAT = 282,
+    LONG = 283,
+    POINTER = 284,
+    CHAR = 285,
+    ARROP = 286,
+    ARRCL = 287,
+    CRLOP = 288,
+    CRLCL = 289,
+    ROP = 290,
+    RCL = 291,
+    UMINUS = 292
   };
 #endif
 /* Tokens.  */
@@ -220,40 +239,44 @@ extern int yydebug;
 #define NEQ 262
 #define LOR 263
 #define LAND 264
-#define LTEQ 265
-#define GTEQ 266
-#define LT 267
-#define GT 268
-#define XOR 269
-#define BOR 270
-#define BAND 271
-#define AEQ 272
-#define INC 273
-#define DEC 274
-#define NUM 275
-#define ID 276
-#define IF 277
-#define ELSE 278
-#define STRUCT 279
-#define INT 280
-#define FLOAT 281
-#define POINTER 282
-#define CHAR 283
-#define ARROP 284
-#define ARRCL 285
-#define CRLOP 286
-#define CRLCL 287
-#define UMINUS 288
+#define LNOT 265
+#define LTEQ 266
+#define GTEQ 267
+#define LT 268
+#define GT 269
+#define XOR 270
+#define BOR 271
+#define BAND 272
+#define AEQ 273
+#define INC 274
+#define DEC 275
+#define NUM 276
+#define ID 277
+#define IF 278
+#define ELSE 279
+#define STRUCT 280
+#define INT 281
+#define FLOAT 282
+#define LONG 283
+#define POINTER 284
+#define CHAR 285
+#define ARROP 286
+#define ARRCL 287
+#define CRLOP 288
+#define CRLCL 289
+#define ROP 290
+#define RCL 291
+#define UMINUS 292
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 66 "prob1.y"
+#line 81 "prob1.y"
 
 	char string[100];
 
-#line 257 "y.tab.c"
+#line 280 "y.tab.c"
 
 };
 typedef union YYSTYPE YYSTYPE;
@@ -572,19 +595,19 @@ union yyalloc
 /* YYFINAL -- State number of the termination state.  */
 #define YYFINAL  3
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   140
+#define YYLAST   175
 
 /* YYNTOKENS -- Number of terminals.  */
-#define YYNTOKENS  42
+#define YYNTOKENS  44
 /* YYNNTS -- Number of nonterminals.  */
-#define YYNNTS  40
+#define YYNNTS  44
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  82
+#define YYNRULES  95
 /* YYNSTATES -- Number of states.  */
-#define YYNSTATES  131
+#define YYNSTATES  155
 
 #define YYUNDEFTOK  2
-#define YYMAXUTOK   288
+#define YYMAXUTOK   292
 
 
 /* YYTRANSLATE(TOKEN-NUM) -- Symbol number corresponding to TOKEN-NUM
@@ -599,9 +622,9 @@ static const yytype_int8 yytranslate[] =
        0,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-       2,     2,     2,    37,     2,     2,     2,     2,     2,     2,
-      38,    39,     2,    33,    41,    34,     2,    35,     2,     2,
-       2,     2,     2,     2,     2,     2,     2,     2,     2,    40,
+       2,     2,     2,    41,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,    37,    43,    38,     2,    39,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,    42,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
@@ -624,22 +647,24 @@ static const yytype_int8 yytranslate[] =
        2,     2,     2,     2,     2,     2,     1,     2,     3,     4,
        5,     6,     7,     8,     9,    10,    11,    12,    13,    14,
       15,    16,    17,    18,    19,    20,    21,    22,    23,    24,
-      25,    26,    27,    28,    29,    30,    31,    32,    36
+      25,    26,    27,    28,    29,    30,    31,    32,    33,    34,
+      35,    36,    40
 };
 
 #if YYDEBUG
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int16 yyrline[] =
 {
-       0,   136,   136,   136,   151,   151,   153,   153,   155,   155,
-     157,   159,   159,   162,   161,   189,   189,   195,   200,   213,
-     219,   220,   223,   231,   239,   221,   254,   266,   270,   270,
-     271,   321,   370,   420,   471,   472,   474,   474,   474,   476,
-     479,   481,   481,   492,   492,   494,   494,   538,   540,   542,
-     542,   597,   599,   599,   601,   601,   603,   607,   611,   615,
-     619,   623,   627,   629,   633,   637,   639,   652,   665,   678,
-     692,   696,   707,   711,   716,   717,   718,   719,   720,   721,
-     722,   723,   725
+       0,   159,   159,   159,   174,   174,   176,   176,   178,   178,
+     180,   182,   182,   185,   184,   212,   212,   218,   224,   232,
+     246,   260,   274,   276,   290,   304,   318,   332,   335,   349,
+     368,   369,   372,   380,   388,   370,   403,   426,   430,   430,
+     431,   482,   532,   583,   635,   636,   638,   638,   638,   638,
+     640,   643,   645,   645,   656,   656,   658,   658,   702,   704,
+     706,   706,   761,   763,   763,   765,   765,   768,   805,   809,
+     813,   817,   821,   826,   828,   832,   836,   838,   851,   864,
+     877,   891,   895,   908,   922,   926,   931,   933,   934,   935,
+     936,   937,   938,   939,   940,   942
 };
 #endif
 
@@ -649,15 +674,15 @@ static const yytype_int16 yyrline[] =
 static const char *const yytname[] =
 {
   "$end", "error", "$undefined", "WHILE", "TRUE", "FALSE", "EQ", "NEQ",
-  "LOR", "LAND", "LTEQ", "GTEQ", "LT", "GT", "XOR", "BOR", "BAND", "AEQ",
-  "INC", "DEC", "NUM", "ID", "IF", "ELSE", "STRUCT", "INT", "FLOAT",
-  "POINTER", "CHAR", "ARROP", "ARRCL", "CRLOP", "CRLCL", "'+'", "'-'",
-  "'/'", "UMINUS", "'!'", "'('", "')'", "';'", "','", "$accept", "start",
-  "$@1", "slst", "BODY", "E", "DUMMY", "CONTROL", "E1", "$@2", "E2", "$@3",
-  "COND", "STMT", "$@4", "$@5", "$@6", "VAR_DEC", "$@7", "REP", "TYPE",
-  "B", "NEXT", "ARRM", "$@8", "PTRDEC", "STRUCTDEC", "$@9", "OPTID",
-  "INSSTR", "$@10", "C", "$@11", "D", "AFTER", "LATER", "PRE", "ANY",
-  "CMP", "ASSIGN", YY_NULLPTR
+  "LOR", "LAND", "LNOT", "LTEQ", "GTEQ", "LT", "GT", "XOR", "BOR", "BAND",
+  "AEQ", "INC", "DEC", "NUM", "ID", "IF", "ELSE", "STRUCT", "INT", "FLOAT",
+  "LONG", "POINTER", "CHAR", "ARROP", "ARRCL", "CRLOP", "CRLCL", "ROP",
+  "RCL", "'+'", "'-'", "'/'", "UMINUS", "'!'", "';'", "','", "$accept",
+  "start", "$@1", "slst", "BODY", "E", "DUMMY", "CONTROL", "E1", "$@2",
+  "E2", "$@3", "COND", "COND0", "COND1", "COND2", "STMT", "$@4", "$@5",
+  "$@6", "VAR_DEC", "$@7", "REP", "TYPE", "B", "NEXT", "ARRM", "$@8",
+  "PTRDEC", "STRUCTDEC", "$@9", "OPTID", "INSSTR", "$@10", "C", "$@11",
+  "D", "AFTER", "LATER", "PRE", "ANY", "OPTYPE", "CMP", "ASSIGN", YY_NULLPTR
 };
 #endif
 
@@ -669,39 +694,41 @@ static const yytype_int16 yytoknum[] =
        0,   256,   257,   258,   259,   260,   261,   262,   263,   264,
      265,   266,   267,   268,   269,   270,   271,   272,   273,   274,
      275,   276,   277,   278,   279,   280,   281,   282,   283,   284,
-     285,   286,   287,    43,    45,    47,   288,    33,    40,    41,
-      59,    44
+     285,   286,   287,   288,   289,   290,   291,    43,    45,    47,
+     292,    33,    59,    44
 };
 # endif
 
-#define YYPACT_NINF (-93)
+#define YYPACT_NINF (-73)
 
 #define yypact_value_is_default(Yyn) \
   ((Yyn) == YYPACT_NINF)
 
-#define YYTABLE_NINF (-42)
+#define YYTABLE_NINF (-53)
 
 #define yytable_value_is_error(Yyn) \
   0
 
   /* YYPACT[STATE-NUM] -- Index in YYTABLE of the portion describing
      STATE-NUM.  */
-static const yytype_int8 yypact[] =
+static const yytype_int16 yypact[] =
 {
-     -93,     6,    75,   -93,   -13,   -11,    97,     4,    17,   -93,
-     -93,   -93,   -93,     0,     2,   -93,    15,   -93,    31,    33,
-      40,   -93,   -93,   -93,   -93,   -93,    49,    45,   -93,   -93,
-      52,   -93,   -93,   -93,   -93,   -93,    62,    31,   -93,   -93,
-     -93,   -93,   -93,   -93,    11,     1,     5,   -93,   -93,    81,
-     -93,    99,    46,    45,    63,    73,    78,    81,   -93,   -93,
-      49,    49,    49,    49,    49,   -93,    58,    58,    49,    53,
-     -93,   -93,   -93,   -93,   -93,   -93,   -93,   -93,    49,    62,
-      88,    82,   -93,    90,    94,    62,    58,   -93,   -93,   -93,
-      61,    61,   -93,   -93,   -93,    23,    93,    23,   -93,   104,
-      96,   -93,   108,   -93,    81,   -93,    63,    89,   -93,   -93,
-     -93,   -93,    58,    98,    46,    63,   101,   -93,   -93,   -93,
-     100,    94,   -93,   110,   -93,   -93,   103,   -93,    63,   105,
-     -93
+     -73,    28,   104,   -73,     8,    13,    80,    16,    33,   -73,
+     -73,   -73,   -73,   -73,    22,    21,   -73,    31,   -73,    49,
+      44,    52,   -73,   -73,   -73,   -73,   -73,    -1,     1,   -73,
+     -73,    56,   -73,   -73,   -73,   -73,   -73,    90,    49,   -73,
+     -73,   -73,   -73,   -73,   -73,    37,    62,    59,    14,   -73,
+     -73,    98,     1,   115,   -73,    99,   140,   -73,   132,    62,
+       1,    91,    78,    79,   115,   -73,   -73,   106,    -1,    -1,
+      -1,    -1,    -1,   -73,     5,     5,   -73,   -73,   132,    -1,
+     111,     1,     1,    11,    11,    11,    11,   -73,   -73,   -73,
+     -73,   -73,   -73,   -73,   -73,    -1,    90,   114,   113,   -73,
+     125,   129,    90,     5,   -73,   -73,   -73,   -73,    87,    87,
+     -73,   -73,   -73,    68,   128,   -73,   -73,   -73,   -73,   -73,
+     -73,    68,   -73,   141,   131,   -73,   144,   -73,   115,   -73,
+      91,   120,   -73,   -73,   -73,   -73,     5,   133,    62,    91,
+     134,   -73,   -73,   -73,   135,   129,   -73,   146,   -73,   -73,
+     138,   -73,    91,   139,   -73
 };
 
   /* YYDEFACT[STATE-NUM] -- Default reduction number in state STATE-NUM.
@@ -709,38 +736,42 @@ static const yytype_int8 yypact[] =
      means the default is an error.  */
 static const yytype_int8 yydefact[] =
 {
-       2,     0,    10,     1,     0,     0,     0,     0,     0,    36,
-      37,    38,     3,     5,     0,     8,     0,    28,    34,     0,
-       0,    66,    68,    82,    67,    69,     0,     0,    45,     4,
-       0,    15,     9,    11,    12,    20,     0,    44,    35,    21,
-      27,    72,    73,    70,    71,     0,    62,    61,    65,    71,
-      22,    19,    51,     0,    10,    39,    29,    32,    40,    43,
-       0,     0,     0,     0,     0,    26,     0,     0,     0,     0,
-      74,    75,    76,    77,    78,    79,    80,    81,     0,     0,
-       0,     0,     6,     0,     0,     0,     0,    58,    60,    59,
-      56,    57,    71,    63,    64,    18,     0,    17,    49,    48,
-       0,    16,     0,    42,    30,    33,    10,     0,    47,    46,
-      13,    52,     0,     0,    51,    10,     0,    31,    23,    50,
-       0,    54,    53,     0,    14,    55,     0,    24,    10,     0,
-      25
+       2,     0,    10,     1,     0,     0,     0,     0,     0,    46,
+      47,    49,    48,     3,     5,     0,     8,     0,    38,    44,
+       0,     0,    77,    79,    95,    78,    80,     0,     0,    56,
+       4,     0,    15,     9,    11,    12,    30,     0,    55,    45,
+      31,    37,    84,    85,    81,    82,     0,     0,    73,    72,
+      76,     0,     0,    82,    32,    17,    22,    27,    18,    62,
+       0,    10,    50,    39,    42,    51,    54,     0,     0,     0,
+       0,     0,     0,    36,     0,     0,    83,    21,     0,     0,
+       0,     0,     0,     0,     0,     0,     0,    87,    88,    89,
+      90,    91,    92,    93,    94,     0,     0,     0,     0,     6,
+       0,     0,     0,     0,    86,    69,    71,    70,    67,    68,
+      82,    74,    75,    29,     0,    19,    20,    25,    26,    23,
+      24,    28,    60,    59,     0,    16,     0,    53,    40,    43,
+      10,     0,    58,    57,    13,    63,     0,     0,    62,    10,
+       0,    41,    33,    61,     0,    65,    64,     0,    14,    66,
+       0,    34,    10,     0,    35
 };
 
   /* YYPGOTO[NTERM-NUM].  */
-static const yytype_int8 yypgoto[] =
+static const yytype_int16 yypgoto[] =
 {
-     -93,   -93,   -93,     7,   -92,   -93,   -93,   -93,   -93,   -93,
-     -93,   -93,    83,   -93,   -93,   -93,   -93,   -93,   -93,   -93,
-     -50,   -93,   -72,   -93,   -93,   102,   -93,   -93,   -93,    21,
-     -93,    19,   -93,   -93,   -17,    51,    -2,   -26,   -93,   -45
+     -73,   -73,   -73,    15,   -72,   -73,   -73,   -73,   -73,   -73,
+     -73,   -73,   108,   -44,    72,   -73,   -73,   -73,   -73,   -73,
+     -73,   -73,   -73,   -45,   -73,   -15,   -73,   -73,   136,   -73,
+     -73,   -73,    34,   -73,    30,   -73,   -73,     0,    61,    -2,
+     -21,   -73,   -73,   -51
 };
 
   /* YYDEFGOTO[NTERM-NUM].  */
 static const yytype_int16 yydefgoto[] =
 {
-      -1,     1,     2,    82,    83,    13,    14,    32,    33,   115,
-      34,    54,    50,    15,    69,   123,   128,    16,    36,    56,
-      17,    18,    57,    58,    84,    38,    19,    52,   109,    80,
-     107,   103,   116,   122,    45,    46,    47,    48,    78,    26
+      -1,     1,     2,    99,   100,    14,    15,    33,    34,   139,
+      35,    61,    54,    55,    56,    57,    16,    80,   147,   152,
+      17,    37,    63,    18,    19,    64,    65,   101,    39,    20,
+      59,   133,    97,   131,   127,   140,   146,    47,    48,    49,
+      50,    51,    95,    27
 };
 
   /* YYTABLE[YYPACT[STATE-NUM]] -- What to do in state STATE-NUM.  If
@@ -748,88 +779,98 @@ static const yytype_int16 yydefgoto[] =
      number is the opposite.  If YYTABLE_NINF, syntax error.  */
 static const yytype_int16 yytable[] =
 {
-      20,    51,    79,   -10,    68,    30,     3,    98,    21,    12,
-      22,    20,    86,   104,   113,    60,    61,    62,     4,     5,
-      29,     6,     7,   120,     8,     9,    10,    51,    11,    24,
-      25,   -10,    66,    31,    63,    64,   129,    60,    61,    62,
-      67,    65,    27,    87,    88,    89,    90,    91,    28,    41,
-      42,    95,    20,    41,    42,    35,    63,    64,    37,   112,
-     105,    97,    41,    42,    79,    43,    49,     4,     5,    43,
-      44,     9,    10,    39,    11,    60,    61,    62,    43,    92,
-      40,     4,     5,    55,     6,     7,   117,     8,     9,    10,
-      53,    11,    96,     4,     5,    -7,     6,     7,    23,     8,
-       9,    10,   -41,    11,    20,    70,    71,    72,    73,    74,
-      75,    76,    77,    20,    23,    24,    25,    93,    94,    85,
-      99,   100,   101,   102,   106,   108,    20,   110,   111,   114,
-     118,   121,   124,   126,   127,   119,    81,   130,     0,    59,
-     125
+      21,    67,    79,    42,    43,    42,    43,    58,    77,    42,
+      43,    52,    21,   103,    96,    42,    43,    13,     4,     5,
+      44,    45,    44,    53,    31,   -10,    44,   110,     3,    30,
+      22,    78,    44,    53,    46,    23,    46,   115,   116,    58,
+      46,     4,     5,    74,     6,     7,    46,     8,     9,    10,
+      11,    28,    12,    75,    32,   -10,    25,    26,   137,    21,
+      78,    78,    78,    78,    78,    78,    29,   144,   105,   106,
+     107,   108,   109,    36,    68,    69,    70,   136,    38,   113,
+     153,   122,   129,    68,    69,    70,    40,   128,     9,    10,
+      11,    60,    12,    96,    41,   121,    71,    72,    24,    25,
+      26,    73,    68,    69,    70,    71,    72,    81,    82,   -52,
+       4,     5,    62,     6,     7,   141,     8,     9,    10,    11,
+      76,    12,   102,     4,     5,    -7,     6,     7,    21,     8,
+       9,    10,    11,    24,    12,   111,   112,    21,    87,    88,
+      89,    90,   104,    91,    92,    93,    94,   114,   123,   124,
+      21,    83,    84,    85,    86,   117,   118,   119,   120,   125,
+     126,   130,   138,   132,   134,   135,   145,   142,    98,   148,
+     150,   151,   143,   154,    66,   149
 };
 
-static const yytype_int16 yycheck[] =
+static const yytype_uint8 yycheck[] =
 {
-       2,    27,    52,     3,    49,     3,     0,    79,    21,     2,
-      21,    13,    57,    85,   106,    14,    15,    16,    18,    19,
-      13,    21,    22,   115,    24,    25,    26,    53,    28,    18,
-      19,    31,    27,    31,    33,    34,   128,    14,    15,    16,
-      35,    40,    38,    60,    61,    62,    63,    64,    31,     4,
-       5,    68,    54,     4,     5,    40,    33,    34,    27,   104,
-      86,    78,     4,     5,   114,    20,    21,    18,    19,    20,
-      21,    25,    26,    40,    28,    14,    15,    16,    20,    21,
-      40,    18,    19,    21,    21,    22,   112,    24,    25,    26,
-      38,    28,    39,    18,    19,    32,    21,    22,    17,    24,
-      25,    26,    29,    28,   106,     6,     7,     8,     9,    10,
-      11,    12,    13,   115,    17,    18,    19,    66,    67,    41,
-      32,    39,    32,    29,    31,    21,   128,    31,    20,    40,
-      32,    30,    32,    23,    31,   114,    53,    32,    -1,    37,
-     121
+       2,    46,    53,     4,     5,     4,     5,    28,    52,     4,
+       5,    10,    14,    64,    59,     4,     5,     2,    19,    20,
+      21,    22,    21,    22,     3,     3,    21,    22,     0,    14,
+      22,    52,    21,    22,    35,    22,    35,    81,    82,    60,
+      35,    19,    20,    29,    22,    23,    35,    25,    26,    27,
+      28,    35,    30,    39,    33,    33,    19,    20,   130,    61,
+      81,    82,    83,    84,    85,    86,    33,   139,    68,    69,
+      70,    71,    72,    42,    15,    16,    17,   128,    29,    79,
+     152,    96,   103,    15,    16,    17,    42,   102,    26,    27,
+      28,    35,    30,   138,    42,    95,    37,    38,    18,    19,
+      20,    42,    15,    16,    17,    37,    38,     8,     9,    31,
+      19,    20,    22,    22,    23,   136,    25,    26,    27,    28,
+      22,    30,    43,    19,    20,    34,    22,    23,   130,    25,
+      26,    27,    28,    18,    30,    74,    75,   139,     6,     7,
+       8,     9,    36,    11,    12,    13,    14,    36,    34,    36,
+     152,    11,    12,    13,    14,    83,    84,    85,    86,    34,
+      31,    33,    42,    22,    33,    21,    32,    34,    60,    34,
+      24,    33,   138,    34,    38,   145
 };
 
   /* YYSTOS[STATE-NUM] -- The (internal number of the) accessing
      symbol of state STATE-NUM.  */
 static const yytype_int8 yystos[] =
 {
-       0,    43,    44,     0,    18,    19,    21,    22,    24,    25,
-      26,    28,    45,    47,    48,    55,    59,    62,    63,    68,
-      78,    21,    21,    17,    18,    19,    81,    38,    31,    45,
-       3,    31,    49,    50,    52,    40,    60,    27,    67,    40,
-      40,     4,     5,    20,    21,    76,    77,    78,    79,    21,
-      54,    79,    69,    38,    53,    21,    61,    64,    65,    67,
-      14,    15,    16,    33,    34,    40,    27,    35,    81,    56,
-       6,     7,     8,     9,    10,    11,    12,    13,    80,    62,
-      71,    54,    45,    46,    66,    41,    81,    76,    76,    76,
-      76,    76,    21,    77,    77,    76,    39,    76,    64,    32,
-      39,    32,    29,    73,    64,    79,    31,    72,    21,    70,
-      31,    20,    81,    46,    40,    51,    74,    79,    32,    71,
-      46,    30,    75,    57,    32,    73,    23,    31,    58,    46,
-      32
+       0,    45,    46,     0,    19,    20,    22,    23,    25,    26,
+      27,    28,    30,    47,    49,    50,    60,    64,    67,    68,
+      73,    83,    22,    22,    18,    19,    20,    87,    35,    33,
+      47,     3,    33,    51,    52,    54,    42,    65,    29,    72,
+      42,    42,     4,     5,    21,    22,    35,    81,    82,    83,
+      84,    85,    10,    22,    56,    57,    58,    59,    84,    74,
+      35,    55,    22,    66,    69,    70,    72,    67,    15,    16,
+      17,    37,    38,    42,    29,    39,    22,    57,    84,    87,
+      61,     8,     9,    11,    12,    13,    14,     6,     7,     8,
+       9,    11,    12,    13,    14,    86,    67,    76,    56,    47,
+      48,    71,    43,    87,    36,    81,    81,    81,    81,    81,
+      22,    82,    82,    81,    36,    57,    57,    58,    58,    58,
+      58,    81,    69,    34,    36,    34,    31,    78,    69,    84,
+      33,    77,    22,    75,    33,    21,    87,    48,    42,    53,
+      79,    84,    34,    76,    48,    32,    80,    62,    34,    78,
+      24,    33,    63,    48,    34
 };
 
   /* YYR1[YYN] -- Symbol number of symbol that rule YYN derives.  */
 static const yytype_int8 yyr1[] =
 {
-       0,    42,    44,    43,    45,    45,    46,    46,    47,    47,
-      48,    49,    49,    51,    50,    53,    52,    54,    54,    54,
-      55,    55,    56,    57,    58,    55,    55,    55,    60,    59,
-      61,    61,    61,    61,    62,    62,    63,    63,    63,    64,
-      64,    66,    65,    67,    67,    69,    68,    70,    70,    72,
-      71,    71,    74,    73,    75,    75,    76,    76,    76,    76,
-      76,    76,    76,    77,    77,    77,    78,    78,    78,    78,
-      79,    79,    79,    79,    80,    80,    80,    80,    80,    80,
-      80,    80,    81
+       0,    44,    46,    45,    47,    47,    48,    48,    49,    49,
+      50,    51,    51,    53,    52,    55,    54,    56,    56,    57,
+      57,    57,    57,    58,    58,    58,    58,    58,    59,    59,
+      60,    60,    61,    62,    63,    60,    60,    60,    65,    64,
+      66,    66,    66,    66,    67,    67,    68,    68,    68,    68,
+      69,    69,    71,    70,    72,    72,    74,    73,    75,    75,
+      77,    76,    76,    79,    78,    80,    80,    81,    81,    81,
+      81,    81,    81,    81,    82,    82,    82,    83,    83,    83,
+      83,    84,    84,    84,    84,    84,    85,    86,    86,    86,
+      86,    86,    86,    86,    86,    87
 };
 
   /* YYR2[YYN] -- Number of symbols on the right hand side of rule YYN.  */
 static const yytype_int8 yyr2[] =
 {
        0,     2,     0,     2,     2,     1,     1,     0,     1,     2,
-       0,     1,     1,     0,     8,     0,     4,     3,     3,     1,
+       0,     1,     1,     0,     8,     0,     4,     1,     1,     3,
+       3,     2,     1,     3,     3,     3,     3,     1,     3,     3,
        2,     2,     0,     0,     0,    14,     4,     2,     0,     3,
        3,     5,     1,     3,     1,     2,     1,     1,     1,     1,
-       1,     0,     3,     2,     1,     0,     6,     1,     0,     0,
-       5,     0,     0,     4,     1,     2,     3,     3,     3,     3,
-       3,     1,     1,     3,     3,     1,     2,     2,     2,     2,
-       1,     1,     1,     1,     1,     1,     1,     1,     1,     1,
-       1,     1,     1
+       1,     1,     0,     3,     2,     1,     0,     6,     1,     0,
+       0,     5,     0,     0,     4,     1,     2,     3,     3,     3,
+       3,     3,     1,     1,     3,     3,     1,     2,     2,     2,
+       2,     1,     1,     2,     1,     1,     3,     1,     1,     1,
+       1,     1,     1,     1,     1,     1
 };
 
 
@@ -1525,15 +1566,15 @@ yyreduce:
   switch (yyn)
     {
   case 2:
-#line 136 "prob1.y"
+#line 159 "prob1.y"
         {
           init();
         }
-#line 1533 "y.tab.c"
+#line 1574 "y.tab.c"
     break;
 
   case 3:
-#line 139 "prob1.y"
+#line 162 "prob1.y"
              { 
               if(error_status)
               {
@@ -1544,23 +1585,23 @@ yyreduce:
                 printf("\nSnippet no: %d : ACCEPTED\n",++line_no,variable_index=0,label_index=0);
               }
               }
-#line 1548 "y.tab.c"
+#line 1589 "y.tab.c"
     break;
 
   case 7:
-#line 153 "prob1.y"
+#line 176 "prob1.y"
               {}
-#line 1554 "y.tab.c"
+#line 1595 "y.tab.c"
     break;
 
   case 10:
-#line 157 "prob1.y"
+#line 180 "prob1.y"
         {char topp[50]; strcpy(topp,generateLabel()); pushout(topp); printf("%s :\n",topp);}
-#line 1560 "y.tab.c"
+#line 1601 "y.tab.c"
     break;
 
   case 13:
-#line 162 "prob1.y"
+#line 185 "prob1.y"
             {
               // print_table(Table_Stack[table_idx-1]);
               init();
@@ -1570,11 +1611,11 @@ yyreduce:
               topin=topin-1;
               printf("%s :\n",topp);
           }
-#line 1574 "y.tab.c"
+#line 1615 "y.tab.c"
     break;
 
   case 14:
-#line 174 "prob1.y"
+#line 197 "prob1.y"
             {
               char topp[50];
               strcpy(topp,outstack[topout-2]);
@@ -1584,63 +1625,221 @@ yyreduce:
               printf("%s :",topp);
               table_idx--;
        }
-#line 1588 "y.tab.c"
+#line 1629 "y.tab.c"
     break;
 
   case 15:
-#line 189 "prob1.y"
+#line 212 "prob1.y"
             {
             init();
           }
-#line 1596 "y.tab.c"
+#line 1637 "y.tab.c"
     break;
 
   case 16:
-#line 193 "prob1.y"
+#line 216 "prob1.y"
             {table_idx--;}
-#line 1602 "y.tab.c"
+#line 1643 "y.tab.c"
     break;
 
   case 17:
-#line 195 "prob1.y"
-                     {strcpy((yyval.string),generateLabel()); printf("if %s %s %s goto %s\n",(yyvsp[-2].string),(yyvsp[-1].string),(yyvsp[0].string),(yyval.string));
-                      pushin((yyval.string));
-                      strcpy((yyval.string),generateLabel()); printf("goto %s\n",(yyval.string));
-                      pushout((yyval.string));
-                      }
-#line 1612 "y.tab.c"
+#line 218 "prob1.y"
+             {
+                strcpy((yyval.string),generateLabel()); printf("if %s!=0 goto %s\n",(yyvsp[0].string),(yyval.string));
+                pushin((yyval.string));
+                strcpy((yyval.string),generateLabel()); printf("goto %s\n",(yyval.string));
+                pushout((yyval.string));
+             }
+#line 1654 "y.tab.c"
     break;
 
   case 18:
-#line 200 "prob1.y"
-                        {
-                        if(missingdeclaration((yyvsp[-2].string)))
-                        {
-                          printf( "error : var '%s' is not declared in the scope\n",(yyvsp[-2].string));
-                        }
-                        else
-                        {
-                          strcpy((yyval.string),generateLabel()); printf("if %s %s %s goto %s\n",(yyvsp[-2].string),(yyvsp[-1].string),(yyvsp[0].string),(yyval.string));
-                          pushin((yyval.string));
-                          strcpy((yyval.string),generateLabel()); printf("goto %s\n",(yyval.string));
-                          pushout((yyval.string));
-                        }
-                      }
-#line 1630 "y.tab.c"
+#line 224 "prob1.y"
+            {
+                    strcpy((yyval.string),generateLabel()); printf("if %s != 0 goto %s\n",(yyvsp[0].string),(yyval.string));
+                    pushin((yyval.string));
+                    strcpy((yyval.string),generateLabel()); printf("goto %s\n",(yyval.string));
+                    pushout((yyval.string));
+            }
+#line 1665 "y.tab.c"
     break;
 
   case 19:
-#line 213 "prob1.y"
-            {strcpy((yyval.string),generateLabel()); printf("if %s != 0 goto %s\n",(yyvsp[0].string),(yyval.string));
-              pushin((yyval.string));
-             strcpy((yyval.string),generateLabel()); printf("goto %s\n",(yyval.string));
-              pushout((yyval.string));
-           }
-#line 1640 "y.tab.c"
+#line 232 "prob1.y"
+                        {
+                        strcpy((yyval.string),generateVariable());
+                        char temp1[50];
+                        char temp2[50];
+                        char temp3[50];
+                        strcpy(temp1,generateLabel());
+                        strcpy(temp2,generateLabel());
+                        strcpy(temp3,generateLabel());
+                        printf("if %s || %s goto %s\n",(yyvsp[-2].string),(yyvsp[0].string),temp1);
+                        printf("goto %s\n",temp2);
+                        printf("%s :\n%s = 1\ngoto %s:\n",temp1,(yyval.string),temp3);
+                        printf("%s :\n%s = 0\n",temp2,(yyval.string));
+                        printf("%s :\n",temp3);
+                     }
+#line 1684 "y.tab.c"
     break;
 
-  case 22:
-#line 223 "prob1.y"
+  case 20:
+#line 246 "prob1.y"
+                         {
+                        strcpy((yyval.string),generateVariable());
+                        char temp1[50];
+                        char temp2[50];
+                        char temp3[50];
+                        strcpy(temp1,generateLabel());
+                        strcpy(temp2,generateLabel());
+                        strcpy(temp3,generateLabel());
+                        printf("if %s && %s goto %s\n",(yyvsp[-2].string),(yyvsp[0].string),temp1);
+                        printf("goto %s\n",temp2);
+                        printf("%s :\n%s = 1\ngoto %s:\n",temp1,(yyval.string),temp3);
+                        printf("%s :\n%s = 0\n",temp2,(yyval.string));
+                        printf("%s :\n",temp3);
+                     }
+#line 1703 "y.tab.c"
+    break;
+
+  case 21:
+#line 260 "prob1.y"
+                   {
+                        strcpy((yyval.string),generateVariable());
+                        char temp1[50];
+                        char temp2[50];
+                        char temp3[50];
+                        strcpy(temp1,generateLabel());
+                        strcpy(temp2,generateLabel());
+                        strcpy(temp3,generateLabel());
+                        printf("if !%s goto %s\n",(yyvsp[-1].string),temp1);
+                        printf("goto %s\n",temp2);
+                        printf("%s :\n%s = 1\ngoto %s:\n",temp1,(yyval.string),temp3);
+                        printf("%s :\n%s = 0\n",temp2,(yyval.string));
+                        printf("%s :\n",temp3);
+                     }
+#line 1722 "y.tab.c"
+    break;
+
+  case 23:
+#line 276 "prob1.y"
+                        {    
+                        strcpy((yyval.string),generateVariable());
+                        char temp1[50];
+                        char temp2[50];
+                        char temp3[50];
+                        strcpy(temp1,generateLabel());
+                        strcpy(temp2,generateLabel());
+                        strcpy(temp3,generateLabel());
+                        printf("if %s < %s goto %s\n",(yyvsp[-2].string),(yyvsp[0].string),temp1);
+                        printf("goto %s\n",temp2);
+                        printf("%s :\n%s = 1\ngoto %s:\n",temp1,(yyval.string),temp3);
+                        printf("%s :\n%s = 0\n",temp2,(yyval.string));
+                        printf("%s :\n",temp3);
+                     }
+#line 1741 "y.tab.c"
+    break;
+
+  case 24:
+#line 290 "prob1.y"
+                       {
+                        strcpy((yyval.string),generateVariable());
+                        char temp1[50];
+                        char temp2[50];
+                        char temp3[50];
+                        strcpy(temp1,generateLabel());
+                        strcpy(temp2,generateLabel());
+                        strcpy(temp3,generateLabel());
+                        printf("if %s > %s goto %s\n",(yyvsp[-2].string),(yyvsp[0].string),temp1);
+                        printf("goto %s\n",temp2);
+                        printf("%s :\n%s = 1\ngoto %s:\n",temp1,(yyval.string),temp3);
+                        printf("%s :\n%s = 0\n",temp2,(yyval.string));
+                        printf("%s :\n",temp3);
+                     }
+#line 1760 "y.tab.c"
+    break;
+
+  case 25:
+#line 304 "prob1.y"
+                         {
+                        strcpy((yyval.string),generateVariable());
+                        char temp1[50];
+                        char temp2[50];
+                        char temp3[50];
+                        strcpy(temp1,generateLabel());
+                        strcpy(temp2,generateLabel());
+                        strcpy(temp3,generateLabel());
+                        printf("if %s <= %s goto %s\n",(yyvsp[-2].string),(yyvsp[0].string),temp1);
+                        printf("goto %s\n",temp2);
+                        printf("%s :\n%s = 1\ngoto %s:\n",temp1,(yyval.string),temp3);
+                        printf("%s :\n%s = 0\n",temp2,(yyval.string));
+                        printf("%s :\n",temp3);
+                     }
+#line 1779 "y.tab.c"
+    break;
+
+  case 26:
+#line 318 "prob1.y"
+                        {
+                        strcpy((yyval.string),generateVariable());
+                        char temp1[50];
+                        char temp2[50];
+                        char temp3[50];
+                        strcpy(temp1,generateLabel());
+                        strcpy(temp2,generateLabel());
+                        strcpy(temp3,generateLabel());
+                        printf("if %s >= %s goto %s\n",(yyvsp[-2].string),(yyvsp[0].string),temp1);
+                        printf("goto %s\n",temp2);
+                        printf("%s :\n%s = 1\ngoto %s:\n",temp1,(yyval.string),temp3);
+                        printf("%s :\n%s = 0\n",temp2,(yyval.string));
+                        printf("%s :\n",temp3);
+                     }
+#line 1798 "y.tab.c"
+    break;
+
+  case 28:
+#line 335 "prob1.y"
+                      {
+                        strcpy((yyval.string),generateVariable());
+                        char temp1[50];
+                        char temp2[50];
+                        char temp3[50];
+                        strcpy(temp1,generateLabel());
+                        strcpy(temp2,generateLabel());
+                        strcpy(temp3,generateLabel());
+                        printf("if %s %s %s goto %s\n",(yyvsp[-2].string),(yyvsp[-1].string),(yyvsp[0].string),temp1);
+                        printf("goto %s\n",temp2);
+                        printf("%s :\n%s = 1\ngoto %s:\n",temp1,(yyval.string),temp3);
+                        printf("%s :\n%s = 0\n",temp2,(yyval.string));
+                        printf("%s :\n",temp3);
+                      }
+#line 1817 "y.tab.c"
+    break;
+
+  case 29:
+#line 349 "prob1.y"
+                        {
+                        if(missingdeclaration((yyvsp[-2].string)))
+                        {
+                          strcpy((yyval.string),generateVariable());
+                          char temp1[50];
+                          char temp2[50];
+                          char temp3[50];
+                          strcpy(temp1,generateLabel());
+                          strcpy(temp2,generateLabel());
+                          strcpy(temp3,generateLabel());
+                          printf("if %s %s %s goto %s\n",(yyvsp[-2].string),(yyvsp[-1].string),(yyvsp[0].string),temp1);
+                          printf("goto %s\n",temp2);
+                          printf("%s :\n%s = 1\ngoto %s:\n",temp1,(yyval.string),temp3);
+                          printf("%s :\n%s = 0\n",temp2,(yyval.string));
+                          printf("%s :\n",temp3);
+                        }
+                      }
+#line 1839 "y.tab.c"
+    break;
+
+  case 32:
+#line 372 "prob1.y"
               {
                 init();
                 char topp[50];
@@ -1648,22 +1847,22 @@ yyreduce:
                 topin=topin-1;
                 printf("%s :\n",topp);
               }
-#line 1652 "y.tab.c"
+#line 1851 "y.tab.c"
     break;
 
-  case 23:
-#line 231 "prob1.y"
+  case 33:
+#line 380 "prob1.y"
                         {
                       char topp[50];
                       strcpy(topp,generateLabel());
                       pushout(topp);
                       printf("goto %s\n",topp);
                     }
-#line 1663 "y.tab.c"
+#line 1862 "y.tab.c"
     break;
 
-  case 24:
-#line 239 "prob1.y"
+  case 34:
+#line 388 "prob1.y"
                       {
                       char topp[50];
                       strcpy(topp,outstack[topout-2]);
@@ -1671,11 +1870,11 @@ yyreduce:
                       topout-=1;
                       printf("%s :\n",topp);
                     }
-#line 1675 "y.tab.c"
+#line 1874 "y.tab.c"
     break;
 
-  case 25:
-#line 247 "prob1.y"
+  case 35:
+#line 396 "prob1.y"
                     {
                       char topp[50];
                       strcpy(topp,outstack[topout-1]);
@@ -1683,11 +1882,11 @@ yyreduce:
                       printf("%s :\n",topp);
                       table_idx--;
                     }
-#line 1687 "y.tab.c"
+#line 1886 "y.tab.c"
     break;
 
-  case 26:
-#line 254 "prob1.y"
+  case 36:
+#line 403 "prob1.y"
                            {
 
                               // print_table();                        
@@ -1697,20 +1896,31 @@ yyreduce:
                               }
                               else
                               {
-                                printf("%s = %s",(yyval.string),(yyvsp[-1].string));
+                                int id_type = get_cur_type((yyvsp[-3].string));
+                                if(id_type < computation_type)
+                                {
+                                  printf( "error : the assignment for '%s' is not vaild\n",(yyvsp[-3].string));
+                                }
+                                else
+                                {
+                                  printf("%s = %s",(yyval.string),(yyvsp[-1].string));
+                                }
                               }     
+                              computation_type = -1;
+                              reset_types();
+                              // print_table();
                            }
-#line 1704 "y.tab.c"
+#line 1914 "y.tab.c"
     break;
 
-  case 28:
-#line 270 "prob1.y"
+  case 38:
+#line 430 "prob1.y"
                {strcpy(temp_store,(yyvsp[0].string));}
-#line 1710 "y.tab.c"
+#line 1920 "y.tab.c"
     break;
 
-  case 30:
-#line 271 "prob1.y"
+  case 40:
+#line 431 "prob1.y"
                              { 
                                   // printf("%s\n",$2);
                                 bool check1 = typecheck(temp_store,(yyvsp[0].string));
@@ -1726,6 +1936,7 @@ yyreduce:
                                 else
                                 {
                                   strcpy(variable[var_idx].type,temp_store);
+                                  strcpy(variable[var_idx].cur_type,temp_store);
                                   strcpy(variable[var_idx].vname,(yyvsp[0].string));
                                   if(!strcmp(temp_store,"int"))
                                   {
@@ -1761,11 +1972,11 @@ yyreduce:
                                 }
                                 // print_table();
                               }
-#line 1765 "y.tab.c"
+#line 1976 "y.tab.c"
     break;
 
-  case 31:
-#line 321 "prob1.y"
+  case 41:
+#line 482 "prob1.y"
                                    {
                                   bool check1 = typecheck(temp_store,(yyvsp[-2].string));
                                   bool check2 = redeclaration(temp_store,(yyvsp[-2].string));
@@ -1781,6 +1992,7 @@ yyreduce:
                                   {
                                     printf("%s = %s\n",(yyvsp[-2].string),(yyvsp[0].string));
                                     strcpy(variable[var_idx].type,temp_store);
+                                    strcpy(variable[var_idx].cur_type,temp_store);
                                     strcpy(variable[var_idx].vname,(yyvsp[-2].string));
                                     if(!strcmp(temp_store,"int"))
                                     {
@@ -1815,11 +2027,11 @@ yyreduce:
                                     printf("%d\n",cur_size);
                                   }
                                }
-#line 1819 "y.tab.c"
+#line 2031 "y.tab.c"
     break;
 
-  case 32:
-#line 370 "prob1.y"
+  case 42:
+#line 532 "prob1.y"
                   { 
                                   // printf("%s\n",$2);
                                 bool check1 = typecheck(temp_store,(yyvsp[0].string));
@@ -1835,6 +2047,7 @@ yyreduce:
                                 else
                                 {
                                   strcpy(variable[var_idx].type,temp_store);
+                                  strcpy(variable[var_idx].cur_type,temp_store);
                                   strcpy(variable[var_idx].vname,(yyvsp[0].string));
                                   if(!strcmp(temp_store,"int"))
                                   {
@@ -1870,11 +2083,11 @@ yyreduce:
                                 }
                                 // print_table();
                               }
-#line 1874 "y.tab.c"
+#line 2087 "y.tab.c"
     break;
 
-  case 33:
-#line 420 "prob1.y"
+  case 43:
+#line 583 "prob1.y"
                             {
                                   bool check1 = typecheck(temp_store,(yyvsp[-2].string));
                                   bool check2 = redeclaration(temp_store,(yyvsp[-2].string));
@@ -1890,6 +2103,7 @@ yyreduce:
                                   {
                                     printf("%s = %s\n",(yyvsp[-2].string),(yyvsp[0].string));
                                     strcpy(variable[var_idx].type,temp_store);
+                                    strcpy(variable[var_idx].cur_type,temp_store);
                                     strcpy(variable[var_idx].vname,(yyvsp[-2].string));
                                     if(!strcmp(temp_store,"int"))
                                     {
@@ -1924,55 +2138,61 @@ yyreduce:
                                     printf("%d\n",cur_size);
                                   }
                                }
-#line 1928 "y.tab.c"
+#line 2142 "y.tab.c"
     break;
 
-  case 34:
-#line 471 "prob1.y"
+  case 44:
+#line 635 "prob1.y"
             {strcpy((yyval.string),(yyvsp[0].string));}
-#line 1934 "y.tab.c"
+#line 2148 "y.tab.c"
     break;
 
-  case 35:
-#line 472 "prob1.y"
+  case 45:
+#line 636 "prob1.y"
                    {strcpy((yyval.string),"pointer");}
-#line 1940 "y.tab.c"
+#line 2154 "y.tab.c"
     break;
 
-  case 36:
-#line 474 "prob1.y"
+  case 46:
+#line 638 "prob1.y"
               {strcpy((yyval.string),"int");}
-#line 1946 "y.tab.c"
+#line 2160 "y.tab.c"
     break;
 
-  case 37:
-#line 474 "prob1.y"
+  case 47:
+#line 638 "prob1.y"
                                          {strcpy((yyval.string),"float");}
-#line 1952 "y.tab.c"
+#line 2166 "y.tab.c"
     break;
 
-  case 38:
-#line 474 "prob1.y"
+  case 48:
+#line 638 "prob1.y"
                                                                      {strcpy((yyval.string),"char");}
-#line 1958 "y.tab.c"
+#line 2172 "y.tab.c"
     break;
 
-  case 39:
-#line 476 "prob1.y"
+  case 49:
+#line 638 "prob1.y"
+                                                                                                 {strcpy((yyval.string),"long");}
+#line 2178 "y.tab.c"
+    break;
+
+  case 50:
+#line 640 "prob1.y"
              {
                 strcpy((yyval.string),(yyvsp[0].string));
              }
-#line 1966 "y.tab.c"
+#line 2186 "y.tab.c"
     break;
 
-  case 41:
-#line 481 "prob1.y"
+  case 52:
+#line 645 "prob1.y"
              {offset = 1;}
-#line 1972 "y.tab.c"
+#line 2192 "y.tab.c"
     break;
 
-  case 42:
-#line 481 "prob1.y"
+  case 53:
+#line 645 "prob1.y"
                              {
                                 // if(missingdeclaration($1))
                                 // {
@@ -1983,21 +2203,21 @@ yyreduce:
                                   strcpy((yyval.string),(yyvsp[-2].string));
                                 // }
                              }
-#line 1987 "y.tab.c"
+#line 2207 "y.tab.c"
     break;
 
-  case 45:
-#line 494 "prob1.y"
+  case 56:
+#line 658 "prob1.y"
                           {
                           struct_variable[struct_var_idx].tab_sz = 0;
                           struct_offset = base_address;
                           init();
                         }
-#line 1997 "y.tab.c"
+#line 2217 "y.tab.c"
     break;
 
-  case 46:
-#line 503 "prob1.y"
+  case 57:
+#line 667 "prob1.y"
                 {
                   // print_table();
                   bool check1 = typecheck((yyvsp[-5].string),(yyvsp[0].string));
@@ -2031,25 +2251,25 @@ yyreduce:
                     offset = 1;                
                   }
                 }
-#line 2035 "y.tab.c"
+#line 2255 "y.tab.c"
     break;
 
-  case 47:
-#line 538 "prob1.y"
+  case 58:
+#line 702 "prob1.y"
            {
               strcpy((yyval.string),(yyvsp[0].string));
            }
-#line 2043 "y.tab.c"
+#line 2263 "y.tab.c"
     break;
 
-  case 48:
-#line 540 "prob1.y"
+  case 59:
+#line 704 "prob1.y"
               {}
-#line 2049 "y.tab.c"
+#line 2269 "y.tab.c"
     break;
 
-  case 49:
-#line 542 "prob1.y"
+  case 60:
+#line 706 "prob1.y"
                     { 
                                   // printf("%s\n",$2);
                                 bool check1 = typecheckStruct((yyvsp[-1].string),(yyvsp[0].string));
@@ -2105,95 +2325,129 @@ yyreduce:
                                 }
                                 // print_table();
                               }
-#line 2109 "y.tab.c"
+#line 2329 "y.tab.c"
     break;
 
-  case 51:
-#line 597 "prob1.y"
+  case 62:
+#line 761 "prob1.y"
                                  {/*print_table();*/}
-#line 2115 "y.tab.c"
+#line 2335 "y.tab.c"
     break;
 
-  case 52:
-#line 599 "prob1.y"
+  case 63:
+#line 763 "prob1.y"
                     {offset*=atoi((yyvsp[0].string));}
-#line 2121 "y.tab.c"
+#line 2341 "y.tab.c"
     break;
 
-  case 56:
-#line 603 "prob1.y"
+  case 67:
+#line 768 "prob1.y"
                         {
+                          // int a1 = get_cur_type($1);
+                          // int a2 = get_cur_type($3);
+                          // if( a1 >= a2)
+                          // {
+                          //   if(a1 == 1)
+                          //   {
+                          //     update_cur_type("int",$3);
+                          //   }
+                          //   if(a1 == 2)
+                          //   {
+                          //     update_cur_type("float",$3);
+                          //   }  
+                          //   if(a1 == 3)
+                          //   {
+                          //     update_cur_type("long",$3);
+                          //   }                            
+                          // }
+                          // else
+                          // {
+                          //   if(a2 == 1)
+                          //   {
+                          //     update_cur_type("int",$3);
+                          //   }
+                          //   if(a2 == 2)
+                          //   {
+                          //     update_cur_type("float",$3);
+                          //   }  
+                          //   if(a2 == 3)
+                          //   {
+                          //     update_cur_type("long",$3);
+                          //   }  
+                          // }
+                          // print_table1();
                           strcpy((yyval.string),generateVariable());
                           printf("%s = %s + %s\n",(yyval.string),(yyvsp[-2].string),(yyvsp[0].string));
                         }
-#line 2130 "y.tab.c"
+#line 2383 "y.tab.c"
     break;
 
-  case 57:
-#line 607 "prob1.y"
+  case 68:
+#line 805 "prob1.y"
                         {
                           strcpy((yyval.string),generateVariable());
                           printf("%s = %s - %s\n",(yyval.string),(yyvsp[-2].string),(yyvsp[0].string));
                         }
-#line 2139 "y.tab.c"
+#line 2392 "y.tab.c"
     break;
 
-  case 58:
-#line 611 "prob1.y"
+  case 69:
+#line 809 "prob1.y"
                         {
                           strcpy((yyval.string),generateVariable());
                           printf("%s = %s ^ %s\n",(yyval.string),(yyvsp[-2].string),(yyvsp[0].string));
                         }
-#line 2148 "y.tab.c"
+#line 2401 "y.tab.c"
     break;
 
-  case 59:
-#line 615 "prob1.y"
+  case 70:
+#line 813 "prob1.y"
                          {
                           strcpy((yyval.string),generateVariable());
                           printf("%s = %s & %s\n",(yyval.string),(yyvsp[-2].string),(yyvsp[0].string));
                          }
-#line 2157 "y.tab.c"
+#line 2410 "y.tab.c"
     break;
 
-  case 60:
-#line 619 "prob1.y"
+  case 71:
+#line 817 "prob1.y"
                         {
                           strcpy((yyval.string),generateVariable());
                           printf("%s = %s | %s\n",(yyval.string),(yyvsp[-2].string),(yyvsp[0].string));
                         }
-#line 2166 "y.tab.c"
+#line 2419 "y.tab.c"
     break;
 
-  case 61:
-#line 623 "prob1.y"
+  case 72:
+#line 821 "prob1.y"
             {
+
               strcpy((yyval.string),generateVariable());
               printf("%s = %s\n",(yyval.string),(yyvsp[0].string));
             }
-#line 2175 "y.tab.c"
+#line 2429 "y.tab.c"
     break;
 
-  case 63:
-#line 629 "prob1.y"
+  case 74:
+#line 828 "prob1.y"
                             {
                           strcpy((yyval.string),generateVariable());
                           printf("%s = %s * %s\n",(yyval.string),(yyvsp[-2].string),(yyvsp[0].string));
                         }
-#line 2184 "y.tab.c"
+#line 2438 "y.tab.c"
     break;
 
-  case 64:
-#line 633 "prob1.y"
+  case 75:
+#line 832 "prob1.y"
                         {
                           strcpy((yyval.string),generateVariable());
                           printf("%s = %s / %s\n",(yyval.string),(yyvsp[-2].string),(yyvsp[0].string));
                         }
-#line 2193 "y.tab.c"
+#line 2447 "y.tab.c"
     break;
 
-  case 66:
-#line 639 "prob1.y"
+  case 77:
+#line 838 "prob1.y"
                {
                 if(missingdeclaration((yyvsp[0].string)))
                 {
@@ -2207,11 +2461,11 @@ yyreduce:
                   printf("%s = %s\n",(yyvsp[0].string),(yyval.string));
                 }
                }
-#line 2211 "y.tab.c"
+#line 2465 "y.tab.c"
     break;
 
-  case 67:
-#line 652 "prob1.y"
+  case 78:
+#line 851 "prob1.y"
                {
                 if(missingdeclaration((yyvsp[-1].string)))
                 {
@@ -2225,11 +2479,11 @@ yyreduce:
                   printf("%s = %s\n",(yyvsp[-1].string),(yyval.string));
                 }
                }
-#line 2229 "y.tab.c"
+#line 2483 "y.tab.c"
     break;
 
-  case 68:
-#line 665 "prob1.y"
+  case 79:
+#line 864 "prob1.y"
                {
                 if(missingdeclaration((yyvsp[0].string)))
                 {
@@ -2243,11 +2497,11 @@ yyreduce:
                   printf("%s = %s\n",(yyvsp[0].string),(yyval.string));
                 }
                }
-#line 2247 "y.tab.c"
+#line 2501 "y.tab.c"
     break;
 
-  case 69:
-#line 678 "prob1.y"
+  case 80:
+#line 877 "prob1.y"
                {
                 if(missingdeclaration((yyvsp[-1].string)))
                 {
@@ -2261,21 +2515,39 @@ yyreduce:
                   printf("%s = %s\n",(yyvsp[-1].string),(yyval.string));
                 }
                }
-#line 2265 "y.tab.c"
+#line 2519 "y.tab.c"
     break;
 
-  case 70:
-#line 692 "prob1.y"
+  case 81:
+#line 891 "prob1.y"
           {
             strcpy((yyval.string),generateVariable());
             printf("%s = %s\n",(yyval.string),(yyvsp[0].string));
           }
-#line 2274 "y.tab.c"
+#line 2528 "y.tab.c"
     break;
 
-  case 71:
-#line 696 "prob1.y"
+  case 82:
+#line 895 "prob1.y"
          {
+            if(missingdeclaration((yyvsp[0].string)))
+            {
+                printf( "error : var '%s' is not declared in the scope\n",(yyvsp[0].string));
+            }
+            else
+            {
+              int a1 = get_cur_type((yyvsp[0].string));
+              computation_type = max(computation_type,a1);
+              strcpy((yyval.string),generateVariable());
+              printf("%s = %s\n",(yyval.string),(yyvsp[0].string));
+            }
+         }
+#line 2546 "y.tab.c"
+    break;
+
+  case 83:
+#line 908 "prob1.y"
+                {
             if(missingdeclaration((yyvsp[0].string)))
             {
                 printf( "error : var '%s' is not declared in the scope\n",(yyvsp[0].string));
@@ -2284,85 +2556,94 @@ yyreduce:
             {
               strcpy((yyval.string),generateVariable());
               printf("%s = %s\n",(yyval.string),(yyvsp[0].string));
+              update_cur_type((yyvsp[-1].string),(yyvsp[0].string));
+              int a1 = get_cur_type((yyvsp[0].string));
+              computation_type = max(computation_type,a1);
             }
          }
-#line 2290 "y.tab.c"
+#line 2565 "y.tab.c"
     break;
 
-  case 72:
-#line 707 "prob1.y"
+  case 84:
+#line 922 "prob1.y"
            {
               strcpy((yyval.string),generateVariable());
               printf("%s = %s\n",(yyval.string),(yyvsp[0].string));
            }
-#line 2299 "y.tab.c"
+#line 2574 "y.tab.c"
     break;
 
-  case 73:
-#line 711 "prob1.y"
+  case 85:
+#line 926 "prob1.y"
             {
               strcpy((yyval.string),generateVariable());
               printf("%s = %s\n",(yyval.string),(yyvsp[0].string));
             }
-#line 2308 "y.tab.c"
+#line 2583 "y.tab.c"
     break;
 
-  case 74:
-#line 716 "prob1.y"
+  case 86:
+#line 931 "prob1.y"
+                      {strcpy((yyval.string),(yyvsp[-1].string));}
+#line 2589 "y.tab.c"
+    break;
+
+  case 87:
+#line 933 "prob1.y"
          {strcpy((yyval.string),(yyvsp[0].string));}
-#line 2314 "y.tab.c"
+#line 2595 "y.tab.c"
     break;
 
-  case 75:
-#line 717 "prob1.y"
+  case 88:
+#line 934 "prob1.y"
           {strcpy((yyval.string),(yyvsp[0].string));}
-#line 2320 "y.tab.c"
+#line 2601 "y.tab.c"
     break;
 
-  case 76:
-#line 718 "prob1.y"
+  case 89:
+#line 935 "prob1.y"
           {strcpy((yyval.string),(yyvsp[0].string));}
-#line 2326 "y.tab.c"
+#line 2607 "y.tab.c"
     break;
 
-  case 77:
-#line 719 "prob1.y"
+  case 90:
+#line 936 "prob1.y"
            {strcpy((yyval.string),(yyvsp[0].string));}
-#line 2332 "y.tab.c"
+#line 2613 "y.tab.c"
     break;
 
-  case 78:
-#line 720 "prob1.y"
+  case 91:
+#line 937 "prob1.y"
            {strcpy((yyval.string),(yyvsp[0].string));}
-#line 2338 "y.tab.c"
+#line 2619 "y.tab.c"
     break;
 
-  case 79:
-#line 721 "prob1.y"
+  case 92:
+#line 938 "prob1.y"
            {strcpy((yyval.string),(yyvsp[0].string));}
-#line 2344 "y.tab.c"
+#line 2625 "y.tab.c"
     break;
 
-  case 80:
-#line 722 "prob1.y"
+  case 93:
+#line 939 "prob1.y"
          {strcpy((yyval.string),(yyvsp[0].string));}
-#line 2350 "y.tab.c"
+#line 2631 "y.tab.c"
     break;
 
-  case 81:
-#line 723 "prob1.y"
+  case 94:
+#line 940 "prob1.y"
          {strcpy((yyval.string),(yyvsp[0].string));}
-#line 2356 "y.tab.c"
+#line 2637 "y.tab.c"
     break;
 
-  case 82:
-#line 725 "prob1.y"
+  case 95:
+#line 942 "prob1.y"
              {strcpy((yyval.string),(yyvsp[0].string));}
-#line 2362 "y.tab.c"
+#line 2643 "y.tab.c"
     break;
 
 
-#line 2366 "y.tab.c"
+#line 2647 "y.tab.c"
 
       default: break;
     }
@@ -2594,7 +2875,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 727 "prob1.y"
+#line 944 "prob1.y"
 
 
 void insert(struct Node* entry)
@@ -2641,6 +2922,25 @@ void print_table()
     printf("%d\t |\n",Table_Stack[table_idx-1]->struct_tables[i]->size);
   }
   printf(" ------------------------------------------------ \n");
+}
+
+void print_table1()
+{
+  printf(" ----------------------------------------------------- \n");
+  printf("|               CURRENT SYMBOL TABLE                  |\n");
+  printf("| --------------------------------------------------- |\n");
+  printf("| var_name      type    cur type      address   size  |\n");
+  int sz = Table_Stack[table_idx-1]->size;
+  for(int i=0;i<sz;i++)
+  { 
+    printf("| ");
+    printf("%s\t\t",Table_Stack[table_idx-1]->tables[i]->vname);
+    printf("%s\t",Table_Stack[table_idx-1]->tables[i]->type);
+    printf("%s\t      ",Table_Stack[table_idx-1]->tables[i]->cur_type);
+    printf("%d\t\t",Table_Stack[table_idx-1]->tables[i]->addr);
+    printf("%d     |\n",Table_Stack[table_idx-1]->tables[i]->size);
+  }
+  printf(" ----------------------------------------------------- \n");
 }
 
 //---------------- STRUCT CHECKING -------------------------
@@ -2733,7 +3033,7 @@ bool redeclaration(char* type,char* data)
       {
         if((!strcmp(Table_Stack[i]->struct_tables[j]->type,type)) && (!strcmp(Table_Stack[i]->struct_tables[j]->vname,data)))
         {
-          printf("128938912389123\n");
+          // printf("128938912389123\n");
           return error_status = true;
         }
       }
@@ -2763,6 +3063,67 @@ bool missingdeclaration(char* data)
       }
     }
     return error_status = true;
+}
+
+bool update_cur_type(char* type,char* data)
+{
+    for(int i=0;i<table_idx;i++)
+    {
+      int inner_size = Table_Stack[i]->size;
+      for(int j=0;j<inner_size;j++)
+      {
+        if(!strcmp(Table_Stack[i]->tables[j]->vname,data))
+        {
+          strcpy(Table_Stack[i]->tables[j]->cur_type,type);
+          return true;
+        }
+      }
+    }
+    error_status = true;
+    return false;
+}
+
+int get_cur_type(char* data)
+{
+    for(int i=0;i<table_idx;i++)
+    {
+      int inner_size = Table_Stack[i]->size;
+      for(int j=0;j<inner_size;j++)
+      {
+        if(!strcmp(Table_Stack[i]->tables[j]->vname,data))
+        {
+          if(!strcmp(Table_Stack[i]->tables[j]->cur_type,"int"))
+          {
+            return 1;
+          }
+          if(!strcmp(Table_Stack[i]->tables[j]->cur_type,"float"))
+          {
+            return 2;
+          }
+          if(!strcmp(Table_Stack[i]->tables[j]->cur_type,"long"))
+          {
+            return 3;
+          }
+          if(!strcmp(Table_Stack[i]->tables[j]->cur_type,"char"))
+          {
+            return 0;
+          }
+        }
+      }
+    }
+    return -1;  
+}
+
+void reset_types()
+{
+    for(int i=0;i<table_idx;i++)
+    {
+      int inner_size = Table_Stack[i]->size;
+      for(int j=0;j<inner_size;j++)
+      {
+        strcpy(Table_Stack[i]->tables[j]->cur_type,Table_Stack[i]->tables[j]->type);
+      }
+    }  
 }
 
 void init()

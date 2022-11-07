@@ -28,274 +28,305 @@ Grammar
 
    12 $@2: %empty
 
-   13 E1: WHILE '(' COND ')' CRLOP $@2 BODY CRLCL
+   13 E1: WHILE ROP COND RCL CRLOP $@2 BODY CRLCL
 
    14 $@3: %empty
 
    15 E2: CRLOP $@3 BODY CRLCL
 
-   16 COND: ANY CMP AFTER
-   17     | ID ASSIGN AFTER
-   18     | ANY
+   16 COND: COND0
+   17     | ANY
 
-   19 STMT: VAR_DEC ';'
-   20     | STRUCTDEC ';'
+   18 COND0: COND0 LOR COND0
+   19      | COND0 LAND COND0
+   20      | LNOT COND0
+   21      | COND1
 
-   21 $@4: %empty
+   22 COND1: COND1 LT COND1
+   23      | COND1 GT COND1
+   24      | COND1 LTEQ COND1
+   25      | COND1 GTEQ COND1
+   26      | COND2
 
-   22 $@5: %empty
+   27 COND2: ANY CMP AFTER
+   28      | ID ASSIGN AFTER
 
-   23 $@6: %empty
+   29 STMT: VAR_DEC ';'
+   30     | STRUCTDEC ';'
 
-   24 STMT: IF '(' COND $@4 ')' CRLOP BODY CRLCL $@5 ELSE CRLOP $@6 BODY CRLCL
-   25     | ID ASSIGN AFTER ';'
-   26     | PRE ';'
+   31 $@4: %empty
 
-   27 $@7: %empty
+   32 $@5: %empty
 
-   28 VAR_DEC: TYPE $@7 REP
+   33 $@6: %empty
 
-   29 REP: REP ',' NEXT
-   30    | REP ',' NEXT ASSIGN ANY
-   31    | NEXT
-   32    | NEXT ASSIGN ANY
+   34 STMT: IF ROP COND $@4 RCL CRLOP BODY CRLCL $@5 ELSE CRLOP $@6 BODY CRLCL
+   35     | ID ASSIGN AFTER ';'
+   36     | PRE ';'
 
-   33 TYPE: B
-   34     | B PTRDEC
+   37 $@7: %empty
 
-   35 B: INT
-   36  | FLOAT
-   37  | CHAR
+   38 VAR_DEC: TYPE $@7 REP
 
-   38 NEXT: ID
-   39     | ARRM
+   39 REP: REP ',' NEXT
+   40    | REP ',' NEXT ASSIGN ANY
+   41    | NEXT
+   42    | NEXT ASSIGN ANY
 
-   40 $@8: %empty
+   43 TYPE: B
+   44     | B PTRDEC
 
-   41 ARRM: ID $@8 C
+   45 B: INT
+   46  | FLOAT
+   47  | CHAR
+   48  | LONG
 
-   42 PTRDEC: POINTER PTRDEC
-   43       | POINTER
+   49 NEXT: ID
+   50     | ARRM
 
-   44 $@9: %empty
+   51 $@8: %empty
 
-   45 STRUCTDEC: STRUCT CRLOP $@9 INSSTR CRLCL OPTID
+   52 ARRM: ID $@8 C
 
-   46 OPTID: ID
-   47      | %empty
+   53 PTRDEC: POINTER PTRDEC
+   54       | POINTER
 
-   48 $@10: %empty
+   55 $@9: %empty
 
-   49 INSSTR: TYPE NEXT $@10 ';' INSSTR
-   50       | %empty
+   56 STRUCTDEC: STRUCT CRLOP $@9 INSSTR CRLCL OPTID
 
-   51 $@11: %empty
+   57 OPTID: ID
+   58      | %empty
 
-   52 C: ARROP NUM $@11 D
+   59 $@10: %empty
 
-   53 D: ARRCL
-   54  | ARRCL C
+   60 INSSTR: TYPE NEXT $@10 ';' INSSTR
+   61       | %empty
 
-   55 AFTER: AFTER '+' AFTER
-   56      | AFTER '-' AFTER
-   57      | AFTER XOR AFTER
-   58      | AFTER BAND AFTER
-   59      | AFTER BOR AFTER
-   60      | PRE
-   61      | LATER
+   62 $@11: %empty
 
-   62 LATER: LATER POINTER LATER
-   63      | LATER '/' LATER
-   64      | ANY
+   63 C: ARROP NUM $@11 D
 
-   65 PRE: INC ID
-   66    | ID INC
-   67    | DEC ID
-   68    | ID DEC
+   64 D: ARRCL
+   65  | ARRCL C
 
-   69 ANY: NUM
-   70    | ID
-   71    | TRUE
-   72    | FALSE
+   66 AFTER: AFTER '+' AFTER
+   67      | AFTER '-' AFTER
+   68      | AFTER XOR AFTER
+   69      | AFTER BAND AFTER
+   70      | AFTER BOR AFTER
+   71      | PRE
+   72      | LATER
 
-   73 CMP: EQ
-   74    | NEQ
-   75    | LOR
-   76    | LAND
-   77    | LTEQ
-   78    | GTEQ
-   79    | LT
-   80    | GT
+   73 LATER: LATER POINTER LATER
+   74      | LATER '/' LATER
+   75      | ANY
 
-   81 ASSIGN: AEQ
+   76 PRE: INC ID
+   77    | ID INC
+   78    | DEC ID
+   79    | ID DEC
+
+   80 ANY: NUM
+   81    | ID
+   82    | OPTYPE ID
+   83    | TRUE
+   84    | FALSE
+
+   85 OPTYPE: ROP TYPE RCL
+
+   86 CMP: EQ
+   87    | NEQ
+   88    | LOR
+   89    | LAND
+   90    | LTEQ
+   91    | GTEQ
+   92    | LT
+   93    | GT
+
+   94 ASSIGN: AEQ
 
 
 Terminals, with rules where they appear
 
     $end (0) 0
     '!' (33)
-    '(' (40) 13 24
-    ')' (41) 13 24
-    '+' (43) 55
-    ',' (44) 29 30
-    '-' (45) 56
-    '/' (47) 63
-    ';' (59) 19 20 25 26 49
+    '+' (43) 66
+    ',' (44) 39 40
+    '-' (45) 67
+    '/' (47) 74
+    ';' (59) 29 30 35 36 60
     error (256)
     WHILE <string> (258) 13
-    TRUE <string> (259) 71
-    FALSE <string> (260) 72
-    EQ <string> (261) 73
-    NEQ <string> (262) 74
-    LOR <string> (263) 75
-    LAND <string> (264) 76
-    LTEQ <string> (265) 77
-    GTEQ <string> (266) 78
-    LT <string> (267) 79
-    GT <string> (268) 80
-    XOR <string> (269) 57
-    BOR <string> (270) 59
-    BAND <string> (271) 58
-    AEQ <string> (272) 81
-    INC <string> (273) 65 66
-    DEC <string> (274) 67 68
-    NUM <string> (275) 52 69
-    ID <string> (276) 17 25 38 41 46 65 66 67 68 70
-    IF <string> (277) 24
-    ELSE <string> (278) 24
-    STRUCT <string> (279) 45
-    INT <string> (280) 35
-    FLOAT <string> (281) 36
-    POINTER <string> (282) 42 43 62
-    CHAR <string> (283) 37
-    ARROP <string> (284) 52
-    ARRCL <string> (285) 53 54
-    CRLOP <string> (286) 13 15 24 45
-    CRLCL <string> (287) 13 15 24 45
-    UMINUS (288)
+    TRUE <string> (259) 83
+    FALSE <string> (260) 84
+    EQ <string> (261) 86
+    NEQ <string> (262) 87
+    LOR <string> (263) 18 88
+    LAND <string> (264) 19 89
+    LNOT <string> (265) 20
+    LTEQ <string> (266) 24 90
+    GTEQ <string> (267) 25 91
+    LT <string> (268) 22 92
+    GT <string> (269) 23 93
+    XOR <string> (270) 68
+    BOR <string> (271) 70
+    BAND <string> (272) 69
+    AEQ <string> (273) 94
+    INC <string> (274) 76 77
+    DEC <string> (275) 78 79
+    NUM <string> (276) 63 80
+    ID <string> (277) 28 35 49 52 57 76 77 78 79 81 82
+    IF <string> (278) 34
+    ELSE <string> (279) 34
+    STRUCT <string> (280) 56
+    INT <string> (281) 45
+    FLOAT <string> (282) 46
+    LONG <string> (283) 48
+    POINTER <string> (284) 53 54 73
+    CHAR <string> (285) 47
+    ARROP <string> (286) 63
+    ARRCL <string> (287) 64 65
+    CRLOP <string> (288) 13 15 34 56
+    CRLCL <string> (289) 13 15 34 56
+    ROP <string> (290) 13 34 85
+    RCL <string> (291) 13 34 85
+    UMINUS (292)
 
 
 Nonterminals, with rules where they appear
 
-    $accept (42)
+    $accept (44)
         on left: 0
-    start (43)
+    start (45)
         on left: 2
         on right: 0
-    $@1 (44)
+    $@1 (46)
         on left: 1
         on right: 2
-    slst (45)
+    slst (47)
         on left: 3 4
         on right: 2 3 5
-    BODY (46)
+    BODY (48)
         on left: 5 6
-        on right: 13 15 24
-    E <string> (47)
+        on right: 13 15 34
+    E <string> (49)
         on left: 7 8
         on right: 3 4
-    DUMMY <string> (48)
+    DUMMY <string> (50)
         on left: 9
         on right: 8
-    CONTROL (49)
+    CONTROL (51)
         on left: 10 11
         on right: 8
-    E1 (50)
+    E1 (52)
         on left: 13
         on right: 10
-    $@2 (51)
+    $@2 (53)
         on left: 12
         on right: 13
-    E2 (52)
+    E2 (54)
         on left: 15
         on right: 11
-    $@3 (53)
+    $@3 (55)
         on left: 14
         on right: 15
-    COND <string> (54)
-        on left: 16 17 18
-        on right: 13 24
-    STMT <string> (55)
-        on left: 19 20 24 25 26
+    COND <string> (56)
+        on left: 16 17
+        on right: 13 34
+    COND0 <string> (57)
+        on left: 18 19 20 21
+        on right: 16 18 19 20
+    COND1 <string> (58)
+        on left: 22 23 24 25 26
+        on right: 21 22 23 24 25
+    COND2 <string> (59)
+        on left: 27 28
+        on right: 26
+    STMT <string> (60)
+        on left: 29 30 34 35 36
         on right: 7
-    $@4 (56)
-        on left: 21
-        on right: 24
-    $@5 (57)
-        on left: 22
-        on right: 24
-    $@6 (58)
-        on left: 23
-        on right: 24
-    VAR_DEC <string> (59)
-        on left: 28
-        on right: 19
-    $@7 (60)
-        on left: 27
-        on right: 28
-    REP (61)
-        on left: 29 30 31 32
-        on right: 28 29 30
-    TYPE <string> (62)
-        on left: 33 34
-        on right: 28 49
-    B <string> (63)
-        on left: 35 36 37
-        on right: 33 34
-    NEXT <string> (64)
-        on left: 38 39
-        on right: 29 30 31 32 49
-    ARRM <string> (65)
-        on left: 41
-        on right: 39
-    $@8 (66)
-        on left: 40
-        on right: 41
-    PTRDEC (67)
-        on left: 42 43
-        on right: 34 42
-    STRUCTDEC <string> (68)
-        on left: 45
-        on right: 20
-    $@9 (69)
-        on left: 44
-        on right: 45
-    OPTID <string> (70)
-        on left: 46 47
-        on right: 45
-    INSSTR <string> (71)
+    $@4 (61)
+        on left: 31
+        on right: 34
+    $@5 (62)
+        on left: 32
+        on right: 34
+    $@6 (63)
+        on left: 33
+        on right: 34
+    VAR_DEC <string> (64)
+        on left: 38
+        on right: 29
+    $@7 (65)
+        on left: 37
+        on right: 38
+    REP (66)
+        on left: 39 40 41 42
+        on right: 38 39 40
+    TYPE <string> (67)
+        on left: 43 44
+        on right: 38 60 85
+    B <string> (68)
+        on left: 45 46 47 48
+        on right: 43 44
+    NEXT <string> (69)
         on left: 49 50
-        on right: 45 49
-    $@10 (72)
-        on left: 48
-        on right: 49
-    C <string> (73)
+        on right: 39 40 41 42 60
+    ARRM <string> (70)
         on left: 52
-        on right: 41 54
-    $@11 (74)
+        on right: 50
+    $@8 (71)
         on left: 51
         on right: 52
-    D <string> (75)
+    PTRDEC (72)
         on left: 53 54
-        on right: 52
-    AFTER <string> (76)
-        on left: 55 56 57 58 59 60 61
-        on right: 16 17 25 55 56 57 58 59
-    LATER <string> (77)
-        on left: 62 63 64
-        on right: 61 62 63
-    PRE <string> (78)
-        on left: 65 66 67 68
-        on right: 26 60
-    ANY <string> (79)
-        on left: 69 70 71 72
-        on right: 16 18 30 32 64
-    CMP <string> (80)
-        on left: 73 74 75 76 77 78 79 80
-        on right: 16
-    ASSIGN <string> (81)
-        on left: 81
-        on right: 17 25 30 32
+        on right: 44 53
+    STRUCTDEC <string> (73)
+        on left: 56
+        on right: 30
+    $@9 (74)
+        on left: 55
+        on right: 56
+    OPTID <string> (75)
+        on left: 57 58
+        on right: 56
+    INSSTR <string> (76)
+        on left: 60 61
+        on right: 56 60
+    $@10 (77)
+        on left: 59
+        on right: 60
+    C <string> (78)
+        on left: 63
+        on right: 52 65
+    $@11 (79)
+        on left: 62
+        on right: 63
+    D <string> (80)
+        on left: 64 65
+        on right: 63
+    AFTER <string> (81)
+        on left: 66 67 68 69 70 71 72
+        on right: 27 28 35 66 67 68 69 70
+    LATER <string> (82)
+        on left: 73 74 75
+        on right: 72 73 74
+    PRE <string> (83)
+        on left: 76 77 78 79
+        on right: 36 71
+    ANY <string> (84)
+        on left: 80 81 82 83 84
+        on right: 17 27 40 42 75
+    OPTYPE <string> (85)
+        on left: 85
+        on right: 82
+    CMP <string> (86)
+        on left: 86 87 88 89 90 91 92 93
+        on right: 27
+    ASSIGN <string> (87)
+        on left: 94
+        on right: 28 35 40 42
 
 
 State 0
@@ -326,19 +357,20 @@ State 2
     STRUCT  shift, and go to state 8
     INT     shift, and go to state 9
     FLOAT   shift, and go to state 10
-    CHAR    shift, and go to state 11
+    LONG    shift, and go to state 11
+    CHAR    shift, and go to state 12
 
     $default  reduce using rule 9 (DUMMY)
 
-    slst       go to state 12
-    E          go to state 13
-    DUMMY      go to state 14
-    STMT       go to state 15
-    VAR_DEC    go to state 16
-    TYPE       go to state 17
-    B          go to state 18
-    STRUCTDEC  go to state 19
-    PRE        go to state 20
+    slst       go to state 13
+    E          go to state 14
+    DUMMY      go to state 15
+    STMT       go to state 16
+    VAR_DEC    go to state 17
+    TYPE       go to state 18
+    B          go to state 19
+    STRUCTDEC  go to state 20
+    PRE        go to state 21
 
 
 State 3
@@ -350,74 +382,81 @@ State 3
 
 State 4
 
-   65 PRE: INC . ID
-
-    ID  shift, and go to state 21
-
-
-State 5
-
-   67 PRE: DEC . ID
+   76 PRE: INC . ID
 
     ID  shift, and go to state 22
 
 
+State 5
+
+   78 PRE: DEC . ID
+
+    ID  shift, and go to state 23
+
+
 State 6
 
-   25 STMT: ID . ASSIGN AFTER ';'
-   66 PRE: ID . INC
-   68    | ID . DEC
+   35 STMT: ID . ASSIGN AFTER ';'
+   77 PRE: ID . INC
+   79    | ID . DEC
 
-    AEQ  shift, and go to state 23
-    INC  shift, and go to state 24
-    DEC  shift, and go to state 25
+    AEQ  shift, and go to state 24
+    INC  shift, and go to state 25
+    DEC  shift, and go to state 26
 
-    ASSIGN  go to state 26
+    ASSIGN  go to state 27
 
 
 State 7
 
-   24 STMT: IF . '(' COND $@4 ')' CRLOP BODY CRLCL $@5 ELSE CRLOP $@6 BODY CRLCL
+   34 STMT: IF . ROP COND $@4 RCL CRLOP BODY CRLCL $@5 ELSE CRLOP $@6 BODY CRLCL
 
-    '('  shift, and go to state 27
+    ROP  shift, and go to state 28
 
 
 State 8
 
-   45 STRUCTDEC: STRUCT . CRLOP $@9 INSSTR CRLCL OPTID
+   56 STRUCTDEC: STRUCT . CRLOP $@9 INSSTR CRLCL OPTID
 
-    CRLOP  shift, and go to state 28
+    CRLOP  shift, and go to state 29
 
 
 State 9
 
-   35 B: INT .
+   45 B: INT .
 
-    $default  reduce using rule 35 (B)
+    $default  reduce using rule 45 (B)
 
 
 State 10
 
-   36 B: FLOAT .
+   46 B: FLOAT .
 
-    $default  reduce using rule 36 (B)
+    $default  reduce using rule 46 (B)
 
 
 State 11
 
-   37 B: CHAR .
+   48 B: LONG .
 
-    $default  reduce using rule 37 (B)
+    $default  reduce using rule 48 (B)
 
 
 State 12
+
+   47 B: CHAR .
+
+    $default  reduce using rule 47 (B)
+
+
+State 13
 
     2 start: $@1 slst .
 
     $default  reduce using rule 2 (start)
 
 
-State 13
+State 14
 
     3 slst: E . slst
     4     | E .
@@ -429,398 +468,487 @@ State 13
     STRUCT  shift, and go to state 8
     INT     shift, and go to state 9
     FLOAT   shift, and go to state 10
-    CHAR    shift, and go to state 11
+    LONG    shift, and go to state 11
+    CHAR    shift, and go to state 12
 
     WHILE     reduce using rule 9 (DUMMY)
     CRLOP     reduce using rule 9 (DUMMY)
     $default  reduce using rule 4 (slst)
 
-    slst       go to state 29
-    E          go to state 13
-    DUMMY      go to state 14
-    STMT       go to state 15
-    VAR_DEC    go to state 16
-    TYPE       go to state 17
-    B          go to state 18
-    STRUCTDEC  go to state 19
-    PRE        go to state 20
-
-
-State 14
-
-    8 E: DUMMY . CONTROL
-
-    WHILE  shift, and go to state 30
-    CRLOP  shift, and go to state 31
-
-    CONTROL  go to state 32
-    E1       go to state 33
-    E2       go to state 34
+    slst       go to state 30
+    E          go to state 14
+    DUMMY      go to state 15
+    STMT       go to state 16
+    VAR_DEC    go to state 17
+    TYPE       go to state 18
+    B          go to state 19
+    STRUCTDEC  go to state 20
+    PRE        go to state 21
 
 
 State 15
+
+    8 E: DUMMY . CONTROL
+
+    WHILE  shift, and go to state 31
+    CRLOP  shift, and go to state 32
+
+    CONTROL  go to state 33
+    E1       go to state 34
+    E2       go to state 35
+
+
+State 16
 
     7 E: STMT .
 
     $default  reduce using rule 7 (E)
 
 
-State 16
-
-   19 STMT: VAR_DEC . ';'
-
-    ';'  shift, and go to state 35
-
-
 State 17
 
-   28 VAR_DEC: TYPE . $@7 REP
+   29 STMT: VAR_DEC . ';'
 
-    $default  reduce using rule 27 ($@7)
-
-    $@7  go to state 36
+    ';'  shift, and go to state 36
 
 
 State 18
 
-   33 TYPE: B .
-   34     | B . PTRDEC
+   38 VAR_DEC: TYPE . $@7 REP
 
-    POINTER  shift, and go to state 37
+    $default  reduce using rule 37 ($@7)
 
-    $default  reduce using rule 33 (TYPE)
-
-    PTRDEC  go to state 38
+    $@7  go to state 37
 
 
 State 19
 
-   20 STMT: STRUCTDEC . ';'
+   43 TYPE: B .
+   44     | B . PTRDEC
 
-    ';'  shift, and go to state 39
+    POINTER  shift, and go to state 38
+
+    $default  reduce using rule 43 (TYPE)
+
+    PTRDEC  go to state 39
 
 
 State 20
 
-   26 STMT: PRE . ';'
+   30 STMT: STRUCTDEC . ';'
 
     ';'  shift, and go to state 40
 
 
 State 21
 
-   65 PRE: INC ID .
+   36 STMT: PRE . ';'
 
-    $default  reduce using rule 65 (PRE)
+    ';'  shift, and go to state 41
 
 
 State 22
 
-   67 PRE: DEC ID .
+   76 PRE: INC ID .
 
-    $default  reduce using rule 67 (PRE)
+    $default  reduce using rule 76 (PRE)
 
 
 State 23
 
-   81 ASSIGN: AEQ .
+   78 PRE: DEC ID .
 
-    $default  reduce using rule 81 (ASSIGN)
+    $default  reduce using rule 78 (PRE)
 
 
 State 24
 
-   66 PRE: ID INC .
+   94 ASSIGN: AEQ .
 
-    $default  reduce using rule 66 (PRE)
+    $default  reduce using rule 94 (ASSIGN)
 
 
 State 25
 
-   68 PRE: ID DEC .
+   77 PRE: ID INC .
 
-    $default  reduce using rule 68 (PRE)
+    $default  reduce using rule 77 (PRE)
 
 
 State 26
 
-   25 STMT: ID ASSIGN . AFTER ';'
+   79 PRE: ID DEC .
 
-    TRUE   shift, and go to state 41
-    FALSE  shift, and go to state 42
-    INC    shift, and go to state 4
-    DEC    shift, and go to state 5
-    NUM    shift, and go to state 43
-    ID     shift, and go to state 44
-
-    AFTER  go to state 45
-    LATER  go to state 46
-    PRE    go to state 47
-    ANY    go to state 48
+    $default  reduce using rule 79 (PRE)
 
 
 State 27
 
-   24 STMT: IF '(' . COND $@4 ')' CRLOP BODY CRLCL $@5 ELSE CRLOP $@6 BODY CRLCL
+   35 STMT: ID ASSIGN . AFTER ';'
 
-    TRUE   shift, and go to state 41
-    FALSE  shift, and go to state 42
-    NUM    shift, and go to state 43
-    ID     shift, and go to state 49
+    TRUE   shift, and go to state 42
+    FALSE  shift, and go to state 43
+    INC    shift, and go to state 4
+    DEC    shift, and go to state 5
+    NUM    shift, and go to state 44
+    ID     shift, and go to state 45
+    ROP    shift, and go to state 46
 
-    COND  go to state 50
-    ANY   go to state 51
+    AFTER   go to state 47
+    LATER   go to state 48
+    PRE     go to state 49
+    ANY     go to state 50
+    OPTYPE  go to state 51
 
 
 State 28
 
-   45 STRUCTDEC: STRUCT CRLOP . $@9 INSSTR CRLCL OPTID
+   34 STMT: IF ROP . COND $@4 RCL CRLOP BODY CRLCL $@5 ELSE CRLOP $@6 BODY CRLCL
 
-    $default  reduce using rule 44 ($@9)
+    TRUE   shift, and go to state 42
+    FALSE  shift, and go to state 43
+    LNOT   shift, and go to state 52
+    NUM    shift, and go to state 44
+    ID     shift, and go to state 53
+    ROP    shift, and go to state 46
 
-    $@9  go to state 52
+    COND    go to state 54
+    COND0   go to state 55
+    COND1   go to state 56
+    COND2   go to state 57
+    ANY     go to state 58
+    OPTYPE  go to state 51
 
 
 State 29
+
+   56 STRUCTDEC: STRUCT CRLOP . $@9 INSSTR CRLCL OPTID
+
+    $default  reduce using rule 55 ($@9)
+
+    $@9  go to state 59
+
+
+State 30
 
     3 slst: E slst .
 
     $default  reduce using rule 3 (slst)
 
 
-State 30
-
-   13 E1: WHILE . '(' COND ')' CRLOP $@2 BODY CRLCL
-
-    '('  shift, and go to state 53
-
-
 State 31
+
+   13 E1: WHILE . ROP COND RCL CRLOP $@2 BODY CRLCL
+
+    ROP  shift, and go to state 60
+
+
+State 32
 
    15 E2: CRLOP . $@3 BODY CRLCL
 
     $default  reduce using rule 14 ($@3)
 
-    $@3  go to state 54
+    $@3  go to state 61
 
 
-State 32
+State 33
 
     8 E: DUMMY CONTROL .
 
     $default  reduce using rule 8 (E)
 
 
-State 33
+State 34
 
    10 CONTROL: E1 .
 
     $default  reduce using rule 10 (CONTROL)
 
 
-State 34
+State 35
 
    11 CONTROL: E2 .
 
     $default  reduce using rule 11 (CONTROL)
 
 
-State 35
-
-   19 STMT: VAR_DEC ';' .
-
-    $default  reduce using rule 19 (STMT)
-
-
 State 36
 
-   28 VAR_DEC: TYPE $@7 . REP
+   29 STMT: VAR_DEC ';' .
 
-    ID  shift, and go to state 55
-
-    REP   go to state 56
-    NEXT  go to state 57
-    ARRM  go to state 58
+    $default  reduce using rule 29 (STMT)
 
 
 State 37
 
-   42 PTRDEC: POINTER . PTRDEC
-   43       | POINTER .
+   38 VAR_DEC: TYPE $@7 . REP
 
-    POINTER  shift, and go to state 37
+    ID  shift, and go to state 62
 
-    $default  reduce using rule 43 (PTRDEC)
-
-    PTRDEC  go to state 59
+    REP   go to state 63
+    NEXT  go to state 64
+    ARRM  go to state 65
 
 
 State 38
 
-   34 TYPE: B PTRDEC .
+   53 PTRDEC: POINTER . PTRDEC
+   54       | POINTER .
 
-    $default  reduce using rule 34 (TYPE)
+    POINTER  shift, and go to state 38
+
+    $default  reduce using rule 54 (PTRDEC)
+
+    PTRDEC  go to state 66
 
 
 State 39
 
-   20 STMT: STRUCTDEC ';' .
+   44 TYPE: B PTRDEC .
 
-    $default  reduce using rule 20 (STMT)
+    $default  reduce using rule 44 (TYPE)
 
 
 State 40
 
-   26 STMT: PRE ';' .
+   30 STMT: STRUCTDEC ';' .
 
-    $default  reduce using rule 26 (STMT)
+    $default  reduce using rule 30 (STMT)
 
 
 State 41
 
-   71 ANY: TRUE .
+   36 STMT: PRE ';' .
 
-    $default  reduce using rule 71 (ANY)
+    $default  reduce using rule 36 (STMT)
 
 
 State 42
 
-   72 ANY: FALSE .
+   83 ANY: TRUE .
 
-    $default  reduce using rule 72 (ANY)
+    $default  reduce using rule 83 (ANY)
 
 
 State 43
 
-   69 ANY: NUM .
+   84 ANY: FALSE .
 
-    $default  reduce using rule 69 (ANY)
+    $default  reduce using rule 84 (ANY)
 
 
 State 44
 
-   66 PRE: ID . INC
-   68    | ID . DEC
-   70 ANY: ID .
+   80 ANY: NUM .
 
-    INC  shift, and go to state 24
-    DEC  shift, and go to state 25
-
-    $default  reduce using rule 70 (ANY)
+    $default  reduce using rule 80 (ANY)
 
 
 State 45
 
-   25 STMT: ID ASSIGN AFTER . ';'
-   55 AFTER: AFTER . '+' AFTER
-   56      | AFTER . '-' AFTER
-   57      | AFTER . XOR AFTER
-   58      | AFTER . BAND AFTER
-   59      | AFTER . BOR AFTER
+   77 PRE: ID . INC
+   79    | ID . DEC
+   81 ANY: ID .
 
-    XOR   shift, and go to state 60
-    BOR   shift, and go to state 61
-    BAND  shift, and go to state 62
-    '+'   shift, and go to state 63
-    '-'   shift, and go to state 64
-    ';'   shift, and go to state 65
+    INC  shift, and go to state 25
+    DEC  shift, and go to state 26
+
+    $default  reduce using rule 81 (ANY)
 
 
 State 46
 
-   61 AFTER: LATER .
-   62 LATER: LATER . POINTER LATER
-   63      | LATER . '/' LATER
+   85 OPTYPE: ROP . TYPE RCL
 
-    POINTER  shift, and go to state 66
-    '/'      shift, and go to state 67
+    INT    shift, and go to state 9
+    FLOAT  shift, and go to state 10
+    LONG   shift, and go to state 11
+    CHAR   shift, and go to state 12
 
-    $default  reduce using rule 61 (AFTER)
+    TYPE  go to state 67
+    B     go to state 19
 
 
 State 47
 
-   60 AFTER: PRE .
+   35 STMT: ID ASSIGN AFTER . ';'
+   66 AFTER: AFTER . '+' AFTER
+   67      | AFTER . '-' AFTER
+   68      | AFTER . XOR AFTER
+   69      | AFTER . BAND AFTER
+   70      | AFTER . BOR AFTER
 
-    $default  reduce using rule 60 (AFTER)
+    XOR   shift, and go to state 68
+    BOR   shift, and go to state 69
+    BAND  shift, and go to state 70
+    '+'   shift, and go to state 71
+    '-'   shift, and go to state 72
+    ';'   shift, and go to state 73
 
 
 State 48
 
-   64 LATER: ANY .
+   72 AFTER: LATER .
+   73 LATER: LATER . POINTER LATER
+   74      | LATER . '/' LATER
 
-    $default  reduce using rule 64 (LATER)
+    POINTER  shift, and go to state 74
+    '/'      shift, and go to state 75
+
+    $default  reduce using rule 72 (AFTER)
 
 
 State 49
 
-   17 COND: ID . ASSIGN AFTER
-   70 ANY: ID .
+   71 AFTER: PRE .
 
-    AEQ  shift, and go to state 23
-
-    $default  reduce using rule 70 (ANY)
-
-    ASSIGN  go to state 68
+    $default  reduce using rule 71 (AFTER)
 
 
 State 50
 
-   24 STMT: IF '(' COND . $@4 ')' CRLOP BODY CRLCL $@5 ELSE CRLOP $@6 BODY CRLCL
+   75 LATER: ANY .
 
-    $default  reduce using rule 21 ($@4)
-
-    $@4  go to state 69
+    $default  reduce using rule 75 (LATER)
 
 
 State 51
 
-   16 COND: ANY . CMP AFTER
-   18     | ANY .
+   82 ANY: OPTYPE . ID
 
-    EQ    shift, and go to state 70
-    NEQ   shift, and go to state 71
-    LOR   shift, and go to state 72
-    LAND  shift, and go to state 73
-    LTEQ  shift, and go to state 74
-    GTEQ  shift, and go to state 75
-    LT    shift, and go to state 76
-    GT    shift, and go to state 77
-
-    $default  reduce using rule 18 (COND)
-
-    CMP  go to state 78
+    ID  shift, and go to state 76
 
 
 State 52
 
-   45 STRUCTDEC: STRUCT CRLOP $@9 . INSSTR CRLCL OPTID
+   20 COND0: LNOT . COND0
 
-    INT    shift, and go to state 9
-    FLOAT  shift, and go to state 10
-    CHAR   shift, and go to state 11
+    TRUE   shift, and go to state 42
+    FALSE  shift, and go to state 43
+    LNOT   shift, and go to state 52
+    NUM    shift, and go to state 44
+    ID     shift, and go to state 53
+    ROP    shift, and go to state 46
 
-    $default  reduce using rule 50 (INSSTR)
-
-    TYPE    go to state 79
-    B       go to state 18
-    INSSTR  go to state 80
+    COND0   go to state 77
+    COND1   go to state 56
+    COND2   go to state 57
+    ANY     go to state 78
+    OPTYPE  go to state 51
 
 
 State 53
 
-   13 E1: WHILE '(' . COND ')' CRLOP $@2 BODY CRLCL
+   28 COND2: ID . ASSIGN AFTER
+   81 ANY: ID .
 
-    TRUE   shift, and go to state 41
-    FALSE  shift, and go to state 42
-    NUM    shift, and go to state 43
-    ID     shift, and go to state 49
+    AEQ  shift, and go to state 24
 
-    COND  go to state 81
-    ANY   go to state 51
+    $default  reduce using rule 81 (ANY)
+
+    ASSIGN  go to state 79
 
 
 State 54
+
+   34 STMT: IF ROP COND . $@4 RCL CRLOP BODY CRLCL $@5 ELSE CRLOP $@6 BODY CRLCL
+
+    $default  reduce using rule 31 ($@4)
+
+    $@4  go to state 80
+
+
+State 55
+
+   16 COND: COND0 .
+   18 COND0: COND0 . LOR COND0
+   19      | COND0 . LAND COND0
+
+    LOR   shift, and go to state 81
+    LAND  shift, and go to state 82
+
+    $default  reduce using rule 16 (COND)
+
+
+State 56
+
+   21 COND0: COND1 .
+   22 COND1: COND1 . LT COND1
+   23      | COND1 . GT COND1
+   24      | COND1 . LTEQ COND1
+   25      | COND1 . GTEQ COND1
+
+    LTEQ  shift, and go to state 83
+    GTEQ  shift, and go to state 84
+    LT    shift, and go to state 85
+    GT    shift, and go to state 86
+
+    $default  reduce using rule 21 (COND0)
+
+
+State 57
+
+   26 COND1: COND2 .
+
+    $default  reduce using rule 26 (COND1)
+
+
+State 58
+
+   17 COND: ANY .
+   27 COND2: ANY . CMP AFTER
+
+    EQ    shift, and go to state 87
+    NEQ   shift, and go to state 88
+    LOR   shift, and go to state 89
+    LAND  shift, and go to state 90
+    LTEQ  shift, and go to state 91
+    GTEQ  shift, and go to state 92
+    LT    shift, and go to state 93
+    GT    shift, and go to state 94
+
+    $default  reduce using rule 17 (COND)
+
+    CMP  go to state 95
+
+
+State 59
+
+   56 STRUCTDEC: STRUCT CRLOP $@9 . INSSTR CRLCL OPTID
+
+    INT    shift, and go to state 9
+    FLOAT  shift, and go to state 10
+    LONG   shift, and go to state 11
+    CHAR   shift, and go to state 12
+
+    $default  reduce using rule 61 (INSSTR)
+
+    TYPE    go to state 96
+    B       go to state 19
+    INSSTR  go to state 97
+
+
+State 60
+
+   13 E1: WHILE ROP . COND RCL CRLOP $@2 BODY CRLCL
+
+    TRUE   shift, and go to state 42
+    FALSE  shift, and go to state 43
+    LNOT   shift, and go to state 52
+    NUM    shift, and go to state 44
+    ID     shift, and go to state 53
+    ROP    shift, and go to state 46
+
+    COND    go to state 98
+    COND0   go to state 55
+    COND1   go to state 56
+    COND2   go to state 57
+    ANY     go to state 58
+    OPTYPE  go to state 51
+
+
+State 61
 
    15 E2: CRLOP $@3 . BODY CRLCL
 
@@ -831,786 +959,791 @@ State 54
     STRUCT  shift, and go to state 8
     INT     shift, and go to state 9
     FLOAT   shift, and go to state 10
-    CHAR    shift, and go to state 11
+    LONG    shift, and go to state 11
+    CHAR    shift, and go to state 12
 
     CRLCL     reduce using rule 6 (BODY)
     $default  reduce using rule 9 (DUMMY)
 
-    slst       go to state 82
-    BODY       go to state 83
-    E          go to state 13
-    DUMMY      go to state 14
-    STMT       go to state 15
-    VAR_DEC    go to state 16
-    TYPE       go to state 17
-    B          go to state 18
-    STRUCTDEC  go to state 19
-    PRE        go to state 20
-
-
-State 55
-
-   38 NEXT: ID .
-   41 ARRM: ID . $@8 C
-
-    ARROP     reduce using rule 40 ($@8)
-    $default  reduce using rule 38 (NEXT)
-
-    $@8  go to state 84
-
-
-State 56
-
-   28 VAR_DEC: TYPE $@7 REP .
-   29 REP: REP . ',' NEXT
-   30    | REP . ',' NEXT ASSIGN ANY
-
-    ','  shift, and go to state 85
-
-    $default  reduce using rule 28 (VAR_DEC)
-
-
-State 57
-
-   31 REP: NEXT .
-   32    | NEXT . ASSIGN ANY
-
-    AEQ  shift, and go to state 23
-
-    $default  reduce using rule 31 (REP)
-
-    ASSIGN  go to state 86
-
-
-State 58
-
-   39 NEXT: ARRM .
-
-    $default  reduce using rule 39 (NEXT)
-
-
-State 59
-
-   42 PTRDEC: POINTER PTRDEC .
-
-    $default  reduce using rule 42 (PTRDEC)
-
-
-State 60
-
-   57 AFTER: AFTER XOR . AFTER
-
-    TRUE   shift, and go to state 41
-    FALSE  shift, and go to state 42
-    INC    shift, and go to state 4
-    DEC    shift, and go to state 5
-    NUM    shift, and go to state 43
-    ID     shift, and go to state 44
-
-    AFTER  go to state 87
-    LATER  go to state 46
-    PRE    go to state 47
-    ANY    go to state 48
-
-
-State 61
-
-   59 AFTER: AFTER BOR . AFTER
-
-    TRUE   shift, and go to state 41
-    FALSE  shift, and go to state 42
-    INC    shift, and go to state 4
-    DEC    shift, and go to state 5
-    NUM    shift, and go to state 43
-    ID     shift, and go to state 44
-
-    AFTER  go to state 88
-    LATER  go to state 46
-    PRE    go to state 47
-    ANY    go to state 48
+    slst       go to state 99
+    BODY       go to state 100
+    E          go to state 14
+    DUMMY      go to state 15
+    STMT       go to state 16
+    VAR_DEC    go to state 17
+    TYPE       go to state 18
+    B          go to state 19
+    STRUCTDEC  go to state 20
+    PRE        go to state 21
 
 
 State 62
 
-   58 AFTER: AFTER BAND . AFTER
+   49 NEXT: ID .
+   52 ARRM: ID . $@8 C
 
-    TRUE   shift, and go to state 41
-    FALSE  shift, and go to state 42
-    INC    shift, and go to state 4
-    DEC    shift, and go to state 5
-    NUM    shift, and go to state 43
-    ID     shift, and go to state 44
+    ARROP     reduce using rule 51 ($@8)
+    $default  reduce using rule 49 (NEXT)
 
-    AFTER  go to state 89
-    LATER  go to state 46
-    PRE    go to state 47
-    ANY    go to state 48
+    $@8  go to state 101
 
 
 State 63
 
-   55 AFTER: AFTER '+' . AFTER
+   38 VAR_DEC: TYPE $@7 REP .
+   39 REP: REP . ',' NEXT
+   40    | REP . ',' NEXT ASSIGN ANY
 
-    TRUE   shift, and go to state 41
-    FALSE  shift, and go to state 42
-    INC    shift, and go to state 4
-    DEC    shift, and go to state 5
-    NUM    shift, and go to state 43
-    ID     shift, and go to state 44
+    ','  shift, and go to state 102
 
-    AFTER  go to state 90
-    LATER  go to state 46
-    PRE    go to state 47
-    ANY    go to state 48
+    $default  reduce using rule 38 (VAR_DEC)
 
 
 State 64
 
-   56 AFTER: AFTER '-' . AFTER
+   41 REP: NEXT .
+   42    | NEXT . ASSIGN ANY
 
-    TRUE   shift, and go to state 41
-    FALSE  shift, and go to state 42
-    INC    shift, and go to state 4
-    DEC    shift, and go to state 5
-    NUM    shift, and go to state 43
-    ID     shift, and go to state 44
+    AEQ  shift, and go to state 24
 
-    AFTER  go to state 91
-    LATER  go to state 46
-    PRE    go to state 47
-    ANY    go to state 48
+    $default  reduce using rule 41 (REP)
+
+    ASSIGN  go to state 103
 
 
 State 65
 
-   25 STMT: ID ASSIGN AFTER ';' .
+   50 NEXT: ARRM .
 
-    $default  reduce using rule 25 (STMT)
+    $default  reduce using rule 50 (NEXT)
 
 
 State 66
 
-   62 LATER: LATER POINTER . LATER
+   53 PTRDEC: POINTER PTRDEC .
 
-    TRUE   shift, and go to state 41
-    FALSE  shift, and go to state 42
-    NUM    shift, and go to state 43
-    ID     shift, and go to state 92
-
-    LATER  go to state 93
-    ANY    go to state 48
+    $default  reduce using rule 53 (PTRDEC)
 
 
 State 67
 
-   63 LATER: LATER '/' . LATER
+   85 OPTYPE: ROP TYPE . RCL
 
-    TRUE   shift, and go to state 41
-    FALSE  shift, and go to state 42
-    NUM    shift, and go to state 43
-    ID     shift, and go to state 92
-
-    LATER  go to state 94
-    ANY    go to state 48
+    RCL  shift, and go to state 104
 
 
 State 68
 
-   17 COND: ID ASSIGN . AFTER
+   68 AFTER: AFTER XOR . AFTER
 
-    TRUE   shift, and go to state 41
-    FALSE  shift, and go to state 42
+    TRUE   shift, and go to state 42
+    FALSE  shift, and go to state 43
     INC    shift, and go to state 4
     DEC    shift, and go to state 5
-    NUM    shift, and go to state 43
-    ID     shift, and go to state 44
+    NUM    shift, and go to state 44
+    ID     shift, and go to state 45
+    ROP    shift, and go to state 46
 
-    AFTER  go to state 95
-    LATER  go to state 46
-    PRE    go to state 47
-    ANY    go to state 48
+    AFTER   go to state 105
+    LATER   go to state 48
+    PRE     go to state 49
+    ANY     go to state 50
+    OPTYPE  go to state 51
 
 
 State 69
 
-   24 STMT: IF '(' COND $@4 . ')' CRLOP BODY CRLCL $@5 ELSE CRLOP $@6 BODY CRLCL
+   70 AFTER: AFTER BOR . AFTER
 
-    ')'  shift, and go to state 96
+    TRUE   shift, and go to state 42
+    FALSE  shift, and go to state 43
+    INC    shift, and go to state 4
+    DEC    shift, and go to state 5
+    NUM    shift, and go to state 44
+    ID     shift, and go to state 45
+    ROP    shift, and go to state 46
+
+    AFTER   go to state 106
+    LATER   go to state 48
+    PRE     go to state 49
+    ANY     go to state 50
+    OPTYPE  go to state 51
 
 
 State 70
 
-   73 CMP: EQ .
+   69 AFTER: AFTER BAND . AFTER
 
-    $default  reduce using rule 73 (CMP)
+    TRUE   shift, and go to state 42
+    FALSE  shift, and go to state 43
+    INC    shift, and go to state 4
+    DEC    shift, and go to state 5
+    NUM    shift, and go to state 44
+    ID     shift, and go to state 45
+    ROP    shift, and go to state 46
+
+    AFTER   go to state 107
+    LATER   go to state 48
+    PRE     go to state 49
+    ANY     go to state 50
+    OPTYPE  go to state 51
 
 
 State 71
 
-   74 CMP: NEQ .
+   66 AFTER: AFTER '+' . AFTER
 
-    $default  reduce using rule 74 (CMP)
+    TRUE   shift, and go to state 42
+    FALSE  shift, and go to state 43
+    INC    shift, and go to state 4
+    DEC    shift, and go to state 5
+    NUM    shift, and go to state 44
+    ID     shift, and go to state 45
+    ROP    shift, and go to state 46
+
+    AFTER   go to state 108
+    LATER   go to state 48
+    PRE     go to state 49
+    ANY     go to state 50
+    OPTYPE  go to state 51
 
 
 State 72
 
-   75 CMP: LOR .
+   67 AFTER: AFTER '-' . AFTER
 
-    $default  reduce using rule 75 (CMP)
+    TRUE   shift, and go to state 42
+    FALSE  shift, and go to state 43
+    INC    shift, and go to state 4
+    DEC    shift, and go to state 5
+    NUM    shift, and go to state 44
+    ID     shift, and go to state 45
+    ROP    shift, and go to state 46
+
+    AFTER   go to state 109
+    LATER   go to state 48
+    PRE     go to state 49
+    ANY     go to state 50
+    OPTYPE  go to state 51
 
 
 State 73
 
-   76 CMP: LAND .
+   35 STMT: ID ASSIGN AFTER ';' .
 
-    $default  reduce using rule 76 (CMP)
+    $default  reduce using rule 35 (STMT)
 
 
 State 74
 
-   77 CMP: LTEQ .
+   73 LATER: LATER POINTER . LATER
 
-    $default  reduce using rule 77 (CMP)
+    TRUE   shift, and go to state 42
+    FALSE  shift, and go to state 43
+    NUM    shift, and go to state 44
+    ID     shift, and go to state 110
+    ROP    shift, and go to state 46
+
+    LATER   go to state 111
+    ANY     go to state 50
+    OPTYPE  go to state 51
 
 
 State 75
 
-   78 CMP: GTEQ .
+   74 LATER: LATER '/' . LATER
 
-    $default  reduce using rule 78 (CMP)
+    TRUE   shift, and go to state 42
+    FALSE  shift, and go to state 43
+    NUM    shift, and go to state 44
+    ID     shift, and go to state 110
+    ROP    shift, and go to state 46
+
+    LATER   go to state 112
+    ANY     go to state 50
+    OPTYPE  go to state 51
 
 
 State 76
 
-   79 CMP: LT .
+   82 ANY: OPTYPE ID .
 
-    $default  reduce using rule 79 (CMP)
+    $default  reduce using rule 82 (ANY)
 
 
 State 77
 
-   80 CMP: GT .
+   18 COND0: COND0 . LOR COND0
+   19      | COND0 . LAND COND0
+   20      | LNOT COND0 .
 
-    $default  reduce using rule 80 (CMP)
+    $default  reduce using rule 20 (COND0)
 
 
 State 78
 
-   16 COND: ANY CMP . AFTER
+   27 COND2: ANY . CMP AFTER
 
-    TRUE   shift, and go to state 41
-    FALSE  shift, and go to state 42
-    INC    shift, and go to state 4
-    DEC    shift, and go to state 5
-    NUM    shift, and go to state 43
-    ID     shift, and go to state 44
+    EQ    shift, and go to state 87
+    NEQ   shift, and go to state 88
+    LOR   shift, and go to state 89
+    LAND  shift, and go to state 90
+    LTEQ  shift, and go to state 91
+    GTEQ  shift, and go to state 92
+    LT    shift, and go to state 93
+    GT    shift, and go to state 94
 
-    AFTER  go to state 97
-    LATER  go to state 46
-    PRE    go to state 47
-    ANY    go to state 48
+    CMP  go to state 95
 
 
 State 79
 
-   49 INSSTR: TYPE . NEXT $@10 ';' INSSTR
+   28 COND2: ID ASSIGN . AFTER
 
-    ID  shift, and go to state 55
+    TRUE   shift, and go to state 42
+    FALSE  shift, and go to state 43
+    INC    shift, and go to state 4
+    DEC    shift, and go to state 5
+    NUM    shift, and go to state 44
+    ID     shift, and go to state 45
+    ROP    shift, and go to state 46
 
-    NEXT  go to state 98
-    ARRM  go to state 58
+    AFTER   go to state 113
+    LATER   go to state 48
+    PRE     go to state 49
+    ANY     go to state 50
+    OPTYPE  go to state 51
 
 
 State 80
 
-   45 STRUCTDEC: STRUCT CRLOP $@9 INSSTR . CRLCL OPTID
+   34 STMT: IF ROP COND $@4 . RCL CRLOP BODY CRLCL $@5 ELSE CRLOP $@6 BODY CRLCL
 
-    CRLCL  shift, and go to state 99
+    RCL  shift, and go to state 114
 
 
 State 81
 
-   13 E1: WHILE '(' COND . ')' CRLOP $@2 BODY CRLCL
+   18 COND0: COND0 LOR . COND0
 
-    ')'  shift, and go to state 100
+    TRUE   shift, and go to state 42
+    FALSE  shift, and go to state 43
+    LNOT   shift, and go to state 52
+    NUM    shift, and go to state 44
+    ID     shift, and go to state 53
+    ROP    shift, and go to state 46
+
+    COND0   go to state 115
+    COND1   go to state 56
+    COND2   go to state 57
+    ANY     go to state 78
+    OPTYPE  go to state 51
 
 
 State 82
+
+   19 COND0: COND0 LAND . COND0
+
+    TRUE   shift, and go to state 42
+    FALSE  shift, and go to state 43
+    LNOT   shift, and go to state 52
+    NUM    shift, and go to state 44
+    ID     shift, and go to state 53
+    ROP    shift, and go to state 46
+
+    COND0   go to state 116
+    COND1   go to state 56
+    COND2   go to state 57
+    ANY     go to state 78
+    OPTYPE  go to state 51
+
+
+State 83
+
+   24 COND1: COND1 LTEQ . COND1
+
+    TRUE   shift, and go to state 42
+    FALSE  shift, and go to state 43
+    NUM    shift, and go to state 44
+    ID     shift, and go to state 53
+    ROP    shift, and go to state 46
+
+    COND1   go to state 117
+    COND2   go to state 57
+    ANY     go to state 78
+    OPTYPE  go to state 51
+
+
+State 84
+
+   25 COND1: COND1 GTEQ . COND1
+
+    TRUE   shift, and go to state 42
+    FALSE  shift, and go to state 43
+    NUM    shift, and go to state 44
+    ID     shift, and go to state 53
+    ROP    shift, and go to state 46
+
+    COND1   go to state 118
+    COND2   go to state 57
+    ANY     go to state 78
+    OPTYPE  go to state 51
+
+
+State 85
+
+   22 COND1: COND1 LT . COND1
+
+    TRUE   shift, and go to state 42
+    FALSE  shift, and go to state 43
+    NUM    shift, and go to state 44
+    ID     shift, and go to state 53
+    ROP    shift, and go to state 46
+
+    COND1   go to state 119
+    COND2   go to state 57
+    ANY     go to state 78
+    OPTYPE  go to state 51
+
+
+State 86
+
+   23 COND1: COND1 GT . COND1
+
+    TRUE   shift, and go to state 42
+    FALSE  shift, and go to state 43
+    NUM    shift, and go to state 44
+    ID     shift, and go to state 53
+    ROP    shift, and go to state 46
+
+    COND1   go to state 120
+    COND2   go to state 57
+    ANY     go to state 78
+    OPTYPE  go to state 51
+
+
+State 87
+
+   86 CMP: EQ .
+
+    $default  reduce using rule 86 (CMP)
+
+
+State 88
+
+   87 CMP: NEQ .
+
+    $default  reduce using rule 87 (CMP)
+
+
+State 89
+
+   88 CMP: LOR .
+
+    $default  reduce using rule 88 (CMP)
+
+
+State 90
+
+   89 CMP: LAND .
+
+    $default  reduce using rule 89 (CMP)
+
+
+State 91
+
+   90 CMP: LTEQ .
+
+    $default  reduce using rule 90 (CMP)
+
+
+State 92
+
+   91 CMP: GTEQ .
+
+    $default  reduce using rule 91 (CMP)
+
+
+State 93
+
+   92 CMP: LT .
+
+    $default  reduce using rule 92 (CMP)
+
+
+State 94
+
+   93 CMP: GT .
+
+    $default  reduce using rule 93 (CMP)
+
+
+State 95
+
+   27 COND2: ANY CMP . AFTER
+
+    TRUE   shift, and go to state 42
+    FALSE  shift, and go to state 43
+    INC    shift, and go to state 4
+    DEC    shift, and go to state 5
+    NUM    shift, and go to state 44
+    ID     shift, and go to state 45
+    ROP    shift, and go to state 46
+
+    AFTER   go to state 121
+    LATER   go to state 48
+    PRE     go to state 49
+    ANY     go to state 50
+    OPTYPE  go to state 51
+
+
+State 96
+
+   60 INSSTR: TYPE . NEXT $@10 ';' INSSTR
+
+    ID  shift, and go to state 62
+
+    NEXT  go to state 122
+    ARRM  go to state 65
+
+
+State 97
+
+   56 STRUCTDEC: STRUCT CRLOP $@9 INSSTR . CRLCL OPTID
+
+    CRLCL  shift, and go to state 123
+
+
+State 98
+
+   13 E1: WHILE ROP COND . RCL CRLOP $@2 BODY CRLCL
+
+    RCL  shift, and go to state 124
+
+
+State 99
 
     5 BODY: slst .
 
     $default  reduce using rule 5 (BODY)
 
 
-State 83
+State 100
 
    15 E2: CRLOP $@3 BODY . CRLCL
 
-    CRLCL  shift, and go to state 101
-
-
-State 84
-
-   41 ARRM: ID $@8 . C
-
-    ARROP  shift, and go to state 102
-
-    C  go to state 103
-
-
-State 85
-
-   29 REP: REP ',' . NEXT
-   30    | REP ',' . NEXT ASSIGN ANY
-
-    ID  shift, and go to state 55
-
-    NEXT  go to state 104
-    ARRM  go to state 58
-
-
-State 86
-
-   32 REP: NEXT ASSIGN . ANY
-
-    TRUE   shift, and go to state 41
-    FALSE  shift, and go to state 42
-    NUM    shift, and go to state 43
-    ID     shift, and go to state 92
-
-    ANY  go to state 105
-
-
-State 87
-
-   55 AFTER: AFTER . '+' AFTER
-   56      | AFTER . '-' AFTER
-   57      | AFTER . XOR AFTER
-   57      | AFTER XOR AFTER .
-   58      | AFTER . BAND AFTER
-   59      | AFTER . BOR AFTER
-
-    $default  reduce using rule 57 (AFTER)
-
-
-State 88
-
-   55 AFTER: AFTER . '+' AFTER
-   56      | AFTER . '-' AFTER
-   57      | AFTER . XOR AFTER
-   58      | AFTER . BAND AFTER
-   59      | AFTER . BOR AFTER
-   59      | AFTER BOR AFTER .
-
-    $default  reduce using rule 59 (AFTER)
-
-
-State 89
-
-   55 AFTER: AFTER . '+' AFTER
-   56      | AFTER . '-' AFTER
-   57      | AFTER . XOR AFTER
-   58      | AFTER . BAND AFTER
-   58      | AFTER BAND AFTER .
-   59      | AFTER . BOR AFTER
-
-    $default  reduce using rule 58 (AFTER)
-
-
-State 90
-
-   55 AFTER: AFTER . '+' AFTER
-   55      | AFTER '+' AFTER .
-   56      | AFTER . '-' AFTER
-   57      | AFTER . XOR AFTER
-   58      | AFTER . BAND AFTER
-   59      | AFTER . BOR AFTER
-
-    XOR   shift, and go to state 60
-    BOR   shift, and go to state 61
-    BAND  shift, and go to state 62
-
-    $default  reduce using rule 55 (AFTER)
-
-
-State 91
-
-   55 AFTER: AFTER . '+' AFTER
-   56      | AFTER . '-' AFTER
-   56      | AFTER '-' AFTER .
-   57      | AFTER . XOR AFTER
-   58      | AFTER . BAND AFTER
-   59      | AFTER . BOR AFTER
-
-    XOR   shift, and go to state 60
-    BOR   shift, and go to state 61
-    BAND  shift, and go to state 62
-
-    $default  reduce using rule 56 (AFTER)
-
-
-State 92
-
-   70 ANY: ID .
-
-    $default  reduce using rule 70 (ANY)
-
-
-State 93
-
-   62 LATER: LATER . POINTER LATER
-   62      | LATER POINTER LATER .
-   63      | LATER . '/' LATER
-
-    $default  reduce using rule 62 (LATER)
-
-
-State 94
-
-   62 LATER: LATER . POINTER LATER
-   63      | LATER . '/' LATER
-   63      | LATER '/' LATER .
-
-    $default  reduce using rule 63 (LATER)
-
-
-State 95
-
-   17 COND: ID ASSIGN AFTER .
-   55 AFTER: AFTER . '+' AFTER
-   56      | AFTER . '-' AFTER
-   57      | AFTER . XOR AFTER
-   58      | AFTER . BAND AFTER
-   59      | AFTER . BOR AFTER
-
-    XOR   shift, and go to state 60
-    BOR   shift, and go to state 61
-    BAND  shift, and go to state 62
-    '+'   shift, and go to state 63
-    '-'   shift, and go to state 64
-
-    $default  reduce using rule 17 (COND)
-
-
-State 96
-
-   24 STMT: IF '(' COND $@4 ')' . CRLOP BODY CRLCL $@5 ELSE CRLOP $@6 BODY CRLCL
-
-    CRLOP  shift, and go to state 106
-
-
-State 97
-
-   16 COND: ANY CMP AFTER .
-   55 AFTER: AFTER . '+' AFTER
-   56      | AFTER . '-' AFTER
-   57      | AFTER . XOR AFTER
-   58      | AFTER . BAND AFTER
-   59      | AFTER . BOR AFTER
-
-    XOR   shift, and go to state 60
-    BOR   shift, and go to state 61
-    BAND  shift, and go to state 62
-    '+'   shift, and go to state 63
-    '-'   shift, and go to state 64
-
-    $default  reduce using rule 16 (COND)
-
-
-State 98
-
-   49 INSSTR: TYPE NEXT . $@10 ';' INSSTR
-
-    $default  reduce using rule 48 ($@10)
-
-    $@10  go to state 107
-
-
-State 99
-
-   45 STRUCTDEC: STRUCT CRLOP $@9 INSSTR CRLCL . OPTID
-
-    ID  shift, and go to state 108
-
-    $default  reduce using rule 47 (OPTID)
-
-    OPTID  go to state 109
-
-
-State 100
-
-   13 E1: WHILE '(' COND ')' . CRLOP $@2 BODY CRLCL
-
-    CRLOP  shift, and go to state 110
+    CRLCL  shift, and go to state 125
 
 
 State 101
+
+   52 ARRM: ID $@8 . C
+
+    ARROP  shift, and go to state 126
+
+    C  go to state 127
+
+
+State 102
+
+   39 REP: REP ',' . NEXT
+   40    | REP ',' . NEXT ASSIGN ANY
+
+    ID  shift, and go to state 62
+
+    NEXT  go to state 128
+    ARRM  go to state 65
+
+
+State 103
+
+   42 REP: NEXT ASSIGN . ANY
+
+    TRUE   shift, and go to state 42
+    FALSE  shift, and go to state 43
+    NUM    shift, and go to state 44
+    ID     shift, and go to state 110
+    ROP    shift, and go to state 46
+
+    ANY     go to state 129
+    OPTYPE  go to state 51
+
+
+State 104
+
+   85 OPTYPE: ROP TYPE RCL .
+
+    $default  reduce using rule 85 (OPTYPE)
+
+
+State 105
+
+   66 AFTER: AFTER . '+' AFTER
+   67      | AFTER . '-' AFTER
+   68      | AFTER . XOR AFTER
+   68      | AFTER XOR AFTER .
+   69      | AFTER . BAND AFTER
+   70      | AFTER . BOR AFTER
+
+    $default  reduce using rule 68 (AFTER)
+
+
+State 106
+
+   66 AFTER: AFTER . '+' AFTER
+   67      | AFTER . '-' AFTER
+   68      | AFTER . XOR AFTER
+   69      | AFTER . BAND AFTER
+   70      | AFTER . BOR AFTER
+   70      | AFTER BOR AFTER .
+
+    $default  reduce using rule 70 (AFTER)
+
+
+State 107
+
+   66 AFTER: AFTER . '+' AFTER
+   67      | AFTER . '-' AFTER
+   68      | AFTER . XOR AFTER
+   69      | AFTER . BAND AFTER
+   69      | AFTER BAND AFTER .
+   70      | AFTER . BOR AFTER
+
+    $default  reduce using rule 69 (AFTER)
+
+
+State 108
+
+   66 AFTER: AFTER . '+' AFTER
+   66      | AFTER '+' AFTER .
+   67      | AFTER . '-' AFTER
+   68      | AFTER . XOR AFTER
+   69      | AFTER . BAND AFTER
+   70      | AFTER . BOR AFTER
+
+    XOR   shift, and go to state 68
+    BOR   shift, and go to state 69
+    BAND  shift, and go to state 70
+
+    $default  reduce using rule 66 (AFTER)
+
+
+State 109
+
+   66 AFTER: AFTER . '+' AFTER
+   67      | AFTER . '-' AFTER
+   67      | AFTER '-' AFTER .
+   68      | AFTER . XOR AFTER
+   69      | AFTER . BAND AFTER
+   70      | AFTER . BOR AFTER
+
+    XOR   shift, and go to state 68
+    BOR   shift, and go to state 69
+    BAND  shift, and go to state 70
+
+    $default  reduce using rule 67 (AFTER)
+
+
+State 110
+
+   81 ANY: ID .
+
+    $default  reduce using rule 81 (ANY)
+
+
+State 111
+
+   73 LATER: LATER . POINTER LATER
+   73      | LATER POINTER LATER .
+   74      | LATER . '/' LATER
+
+    $default  reduce using rule 73 (LATER)
+
+
+State 112
+
+   73 LATER: LATER . POINTER LATER
+   74      | LATER . '/' LATER
+   74      | LATER '/' LATER .
+
+    $default  reduce using rule 74 (LATER)
+
+
+State 113
+
+   28 COND2: ID ASSIGN AFTER .
+   66 AFTER: AFTER . '+' AFTER
+   67      | AFTER . '-' AFTER
+   68      | AFTER . XOR AFTER
+   69      | AFTER . BAND AFTER
+   70      | AFTER . BOR AFTER
+
+    XOR   shift, and go to state 68
+    BOR   shift, and go to state 69
+    BAND  shift, and go to state 70
+    '+'   shift, and go to state 71
+    '-'   shift, and go to state 72
+
+    $default  reduce using rule 28 (COND2)
+
+
+State 114
+
+   34 STMT: IF ROP COND $@4 RCL . CRLOP BODY CRLCL $@5 ELSE CRLOP $@6 BODY CRLCL
+
+    CRLOP  shift, and go to state 130
+
+
+State 115
+
+   18 COND0: COND0 . LOR COND0
+   18      | COND0 LOR COND0 .
+   19      | COND0 . LAND COND0
+
+    $default  reduce using rule 18 (COND0)
+
+
+State 116
+
+   18 COND0: COND0 . LOR COND0
+   19      | COND0 . LAND COND0
+   19      | COND0 LAND COND0 .
+
+    $default  reduce using rule 19 (COND0)
+
+
+State 117
+
+   22 COND1: COND1 . LT COND1
+   23      | COND1 . GT COND1
+   24      | COND1 . LTEQ COND1
+   24      | COND1 LTEQ COND1 .
+   25      | COND1 . GTEQ COND1
+
+    $default  reduce using rule 24 (COND1)
+
+
+State 118
+
+   22 COND1: COND1 . LT COND1
+   23      | COND1 . GT COND1
+   24      | COND1 . LTEQ COND1
+   25      | COND1 . GTEQ COND1
+   25      | COND1 GTEQ COND1 .
+
+    $default  reduce using rule 25 (COND1)
+
+
+State 119
+
+   22 COND1: COND1 . LT COND1
+   22      | COND1 LT COND1 .
+   23      | COND1 . GT COND1
+   24      | COND1 . LTEQ COND1
+   25      | COND1 . GTEQ COND1
+
+    $default  reduce using rule 22 (COND1)
+
+
+State 120
+
+   22 COND1: COND1 . LT COND1
+   23      | COND1 . GT COND1
+   23      | COND1 GT COND1 .
+   24      | COND1 . LTEQ COND1
+   25      | COND1 . GTEQ COND1
+
+    $default  reduce using rule 23 (COND1)
+
+
+State 121
+
+   27 COND2: ANY CMP AFTER .
+   66 AFTER: AFTER . '+' AFTER
+   67      | AFTER . '-' AFTER
+   68      | AFTER . XOR AFTER
+   69      | AFTER . BAND AFTER
+   70      | AFTER . BOR AFTER
+
+    XOR   shift, and go to state 68
+    BOR   shift, and go to state 69
+    BAND  shift, and go to state 70
+    '+'   shift, and go to state 71
+    '-'   shift, and go to state 72
+
+    $default  reduce using rule 27 (COND2)
+
+
+State 122
+
+   60 INSSTR: TYPE NEXT . $@10 ';' INSSTR
+
+    $default  reduce using rule 59 ($@10)
+
+    $@10  go to state 131
+
+
+State 123
+
+   56 STRUCTDEC: STRUCT CRLOP $@9 INSSTR CRLCL . OPTID
+
+    ID  shift, and go to state 132
+
+    $default  reduce using rule 58 (OPTID)
+
+    OPTID  go to state 133
+
+
+State 124
+
+   13 E1: WHILE ROP COND RCL . CRLOP $@2 BODY CRLCL
+
+    CRLOP  shift, and go to state 134
+
+
+State 125
 
    15 E2: CRLOP $@3 BODY CRLCL .
 
     $default  reduce using rule 15 (E2)
 
 
-State 102
-
-   52 C: ARROP . NUM $@11 D
-
-    NUM  shift, and go to state 111
-
-
-State 103
-
-   41 ARRM: ID $@8 C .
-
-    $default  reduce using rule 41 (ARRM)
-
-
-State 104
-
-   29 REP: REP ',' NEXT .
-   30    | REP ',' NEXT . ASSIGN ANY
-
-    AEQ  shift, and go to state 23
-
-    $default  reduce using rule 29 (REP)
-
-    ASSIGN  go to state 112
-
-
-State 105
-
-   32 REP: NEXT ASSIGN ANY .
-
-    $default  reduce using rule 32 (REP)
-
-
-State 106
-
-   24 STMT: IF '(' COND $@4 ')' CRLOP . BODY CRLCL $@5 ELSE CRLOP $@6 BODY CRLCL
-
-    INC     shift, and go to state 4
-    DEC     shift, and go to state 5
-    ID      shift, and go to state 6
-    IF      shift, and go to state 7
-    STRUCT  shift, and go to state 8
-    INT     shift, and go to state 9
-    FLOAT   shift, and go to state 10
-    CHAR    shift, and go to state 11
-
-    CRLCL     reduce using rule 6 (BODY)
-    $default  reduce using rule 9 (DUMMY)
-
-    slst       go to state 82
-    BODY       go to state 113
-    E          go to state 13
-    DUMMY      go to state 14
-    STMT       go to state 15
-    VAR_DEC    go to state 16
-    TYPE       go to state 17
-    B          go to state 18
-    STRUCTDEC  go to state 19
-    PRE        go to state 20
-
-
-State 107
-
-   49 INSSTR: TYPE NEXT $@10 . ';' INSSTR
-
-    ';'  shift, and go to state 114
-
-
-State 108
-
-   46 OPTID: ID .
-
-    $default  reduce using rule 46 (OPTID)
-
-
-State 109
-
-   45 STRUCTDEC: STRUCT CRLOP $@9 INSSTR CRLCL OPTID .
-
-    $default  reduce using rule 45 (STRUCTDEC)
-
-
-State 110
-
-   13 E1: WHILE '(' COND ')' CRLOP . $@2 BODY CRLCL
-
-    $default  reduce using rule 12 ($@2)
-
-    $@2  go to state 115
-
-
-State 111
-
-   52 C: ARROP NUM . $@11 D
-
-    $default  reduce using rule 51 ($@11)
-
-    $@11  go to state 116
-
-
-State 112
-
-   30 REP: REP ',' NEXT ASSIGN . ANY
-
-    TRUE   shift, and go to state 41
-    FALSE  shift, and go to state 42
-    NUM    shift, and go to state 43
-    ID     shift, and go to state 92
-
-    ANY  go to state 117
-
-
-State 113
-
-   24 STMT: IF '(' COND $@4 ')' CRLOP BODY . CRLCL $@5 ELSE CRLOP $@6 BODY CRLCL
-
-    CRLCL  shift, and go to state 118
-
-
-State 114
-
-   49 INSSTR: TYPE NEXT $@10 ';' . INSSTR
-
-    INT    shift, and go to state 9
-    FLOAT  shift, and go to state 10
-    CHAR   shift, and go to state 11
-
-    $default  reduce using rule 50 (INSSTR)
-
-    TYPE    go to state 79
-    B       go to state 18
-    INSSTR  go to state 119
-
-
-State 115
-
-   13 E1: WHILE '(' COND ')' CRLOP $@2 . BODY CRLCL
-
-    INC     shift, and go to state 4
-    DEC     shift, and go to state 5
-    ID      shift, and go to state 6
-    IF      shift, and go to state 7
-    STRUCT  shift, and go to state 8
-    INT     shift, and go to state 9
-    FLOAT   shift, and go to state 10
-    CHAR    shift, and go to state 11
-
-    CRLCL     reduce using rule 6 (BODY)
-    $default  reduce using rule 9 (DUMMY)
-
-    slst       go to state 82
-    BODY       go to state 120
-    E          go to state 13
-    DUMMY      go to state 14
-    STMT       go to state 15
-    VAR_DEC    go to state 16
-    TYPE       go to state 17
-    B          go to state 18
-    STRUCTDEC  go to state 19
-    PRE        go to state 20
-
-
-State 116
-
-   52 C: ARROP NUM $@11 . D
-
-    ARRCL  shift, and go to state 121
-
-    D  go to state 122
-
-
-State 117
-
-   30 REP: REP ',' NEXT ASSIGN ANY .
-
-    $default  reduce using rule 30 (REP)
-
-
-State 118
-
-   24 STMT: IF '(' COND $@4 ')' CRLOP BODY CRLCL . $@5 ELSE CRLOP $@6 BODY CRLCL
-
-    $default  reduce using rule 22 ($@5)
-
-    $@5  go to state 123
-
-
-State 119
-
-   49 INSSTR: TYPE NEXT $@10 ';' INSSTR .
-
-    $default  reduce using rule 49 (INSSTR)
-
-
-State 120
-
-   13 E1: WHILE '(' COND ')' CRLOP $@2 BODY . CRLCL
-
-    CRLCL  shift, and go to state 124
-
-
-State 121
-
-   53 D: ARRCL .
-   54  | ARRCL . C
-
-    ARROP  shift, and go to state 102
-
-    $default  reduce using rule 53 (D)
-
-    C  go to state 125
-
-
-State 122
-
-   52 C: ARROP NUM $@11 D .
-
-    $default  reduce using rule 52 (C)
-
-
-State 123
-
-   24 STMT: IF '(' COND $@4 ')' CRLOP BODY CRLCL $@5 . ELSE CRLOP $@6 BODY CRLCL
-
-    ELSE  shift, and go to state 126
-
-
-State 124
-
-   13 E1: WHILE '(' COND ')' CRLOP $@2 BODY CRLCL .
-
-    $default  reduce using rule 13 (E1)
-
-
-State 125
-
-   54 D: ARRCL C .
-
-    $default  reduce using rule 54 (D)
-
-
 State 126
 
-   24 STMT: IF '(' COND $@4 ')' CRLOP BODY CRLCL $@5 ELSE . CRLOP $@6 BODY CRLCL
+   63 C: ARROP . NUM $@11 D
 
-    CRLOP  shift, and go to state 127
+    NUM  shift, and go to state 135
 
 
 State 127
 
-   24 STMT: IF '(' COND $@4 ')' CRLOP BODY CRLCL $@5 ELSE CRLOP . $@6 BODY CRLCL
+   52 ARRM: ID $@8 C .
 
-    $default  reduce using rule 23 ($@6)
-
-    $@6  go to state 128
+    $default  reduce using rule 52 (ARRM)
 
 
 State 128
 
-   24 STMT: IF '(' COND $@4 ')' CRLOP BODY CRLCL $@5 ELSE CRLOP $@6 . BODY CRLCL
+   39 REP: REP ',' NEXT .
+   40    | REP ',' NEXT . ASSIGN ANY
+
+    AEQ  shift, and go to state 24
+
+    $default  reduce using rule 39 (REP)
+
+    ASSIGN  go to state 136
+
+
+State 129
+
+   42 REP: NEXT ASSIGN ANY .
+
+    $default  reduce using rule 42 (REP)
+
+
+State 130
+
+   34 STMT: IF ROP COND $@4 RCL CRLOP . BODY CRLCL $@5 ELSE CRLOP $@6 BODY CRLCL
 
     INC     shift, and go to state 4
     DEC     shift, and go to state 5
@@ -1619,32 +1752,262 @@ State 128
     STRUCT  shift, and go to state 8
     INT     shift, and go to state 9
     FLOAT   shift, and go to state 10
-    CHAR    shift, and go to state 11
+    LONG    shift, and go to state 11
+    CHAR    shift, and go to state 12
 
     CRLCL     reduce using rule 6 (BODY)
     $default  reduce using rule 9 (DUMMY)
 
-    slst       go to state 82
-    BODY       go to state 129
-    E          go to state 13
-    DUMMY      go to state 14
-    STMT       go to state 15
-    VAR_DEC    go to state 16
-    TYPE       go to state 17
-    B          go to state 18
-    STRUCTDEC  go to state 19
-    PRE        go to state 20
+    slst       go to state 99
+    BODY       go to state 137
+    E          go to state 14
+    DUMMY      go to state 15
+    STMT       go to state 16
+    VAR_DEC    go to state 17
+    TYPE       go to state 18
+    B          go to state 19
+    STRUCTDEC  go to state 20
+    PRE        go to state 21
 
 
-State 129
+State 131
 
-   24 STMT: IF '(' COND $@4 ')' CRLOP BODY CRLCL $@5 ELSE CRLOP $@6 BODY . CRLCL
+   60 INSSTR: TYPE NEXT $@10 . ';' INSSTR
 
-    CRLCL  shift, and go to state 130
+    ';'  shift, and go to state 138
 
 
-State 130
+State 132
 
-   24 STMT: IF '(' COND $@4 ')' CRLOP BODY CRLCL $@5 ELSE CRLOP $@6 BODY CRLCL .
+   57 OPTID: ID .
 
-    $default  reduce using rule 24 (STMT)
+    $default  reduce using rule 57 (OPTID)
+
+
+State 133
+
+   56 STRUCTDEC: STRUCT CRLOP $@9 INSSTR CRLCL OPTID .
+
+    $default  reduce using rule 56 (STRUCTDEC)
+
+
+State 134
+
+   13 E1: WHILE ROP COND RCL CRLOP . $@2 BODY CRLCL
+
+    $default  reduce using rule 12 ($@2)
+
+    $@2  go to state 139
+
+
+State 135
+
+   63 C: ARROP NUM . $@11 D
+
+    $default  reduce using rule 62 ($@11)
+
+    $@11  go to state 140
+
+
+State 136
+
+   40 REP: REP ',' NEXT ASSIGN . ANY
+
+    TRUE   shift, and go to state 42
+    FALSE  shift, and go to state 43
+    NUM    shift, and go to state 44
+    ID     shift, and go to state 110
+    ROP    shift, and go to state 46
+
+    ANY     go to state 141
+    OPTYPE  go to state 51
+
+
+State 137
+
+   34 STMT: IF ROP COND $@4 RCL CRLOP BODY . CRLCL $@5 ELSE CRLOP $@6 BODY CRLCL
+
+    CRLCL  shift, and go to state 142
+
+
+State 138
+
+   60 INSSTR: TYPE NEXT $@10 ';' . INSSTR
+
+    INT    shift, and go to state 9
+    FLOAT  shift, and go to state 10
+    LONG   shift, and go to state 11
+    CHAR   shift, and go to state 12
+
+    $default  reduce using rule 61 (INSSTR)
+
+    TYPE    go to state 96
+    B       go to state 19
+    INSSTR  go to state 143
+
+
+State 139
+
+   13 E1: WHILE ROP COND RCL CRLOP $@2 . BODY CRLCL
+
+    INC     shift, and go to state 4
+    DEC     shift, and go to state 5
+    ID      shift, and go to state 6
+    IF      shift, and go to state 7
+    STRUCT  shift, and go to state 8
+    INT     shift, and go to state 9
+    FLOAT   shift, and go to state 10
+    LONG    shift, and go to state 11
+    CHAR    shift, and go to state 12
+
+    CRLCL     reduce using rule 6 (BODY)
+    $default  reduce using rule 9 (DUMMY)
+
+    slst       go to state 99
+    BODY       go to state 144
+    E          go to state 14
+    DUMMY      go to state 15
+    STMT       go to state 16
+    VAR_DEC    go to state 17
+    TYPE       go to state 18
+    B          go to state 19
+    STRUCTDEC  go to state 20
+    PRE        go to state 21
+
+
+State 140
+
+   63 C: ARROP NUM $@11 . D
+
+    ARRCL  shift, and go to state 145
+
+    D  go to state 146
+
+
+State 141
+
+   40 REP: REP ',' NEXT ASSIGN ANY .
+
+    $default  reduce using rule 40 (REP)
+
+
+State 142
+
+   34 STMT: IF ROP COND $@4 RCL CRLOP BODY CRLCL . $@5 ELSE CRLOP $@6 BODY CRLCL
+
+    $default  reduce using rule 32 ($@5)
+
+    $@5  go to state 147
+
+
+State 143
+
+   60 INSSTR: TYPE NEXT $@10 ';' INSSTR .
+
+    $default  reduce using rule 60 (INSSTR)
+
+
+State 144
+
+   13 E1: WHILE ROP COND RCL CRLOP $@2 BODY . CRLCL
+
+    CRLCL  shift, and go to state 148
+
+
+State 145
+
+   64 D: ARRCL .
+   65  | ARRCL . C
+
+    ARROP  shift, and go to state 126
+
+    $default  reduce using rule 64 (D)
+
+    C  go to state 149
+
+
+State 146
+
+   63 C: ARROP NUM $@11 D .
+
+    $default  reduce using rule 63 (C)
+
+
+State 147
+
+   34 STMT: IF ROP COND $@4 RCL CRLOP BODY CRLCL $@5 . ELSE CRLOP $@6 BODY CRLCL
+
+    ELSE  shift, and go to state 150
+
+
+State 148
+
+   13 E1: WHILE ROP COND RCL CRLOP $@2 BODY CRLCL .
+
+    $default  reduce using rule 13 (E1)
+
+
+State 149
+
+   65 D: ARRCL C .
+
+    $default  reduce using rule 65 (D)
+
+
+State 150
+
+   34 STMT: IF ROP COND $@4 RCL CRLOP BODY CRLCL $@5 ELSE . CRLOP $@6 BODY CRLCL
+
+    CRLOP  shift, and go to state 151
+
+
+State 151
+
+   34 STMT: IF ROP COND $@4 RCL CRLOP BODY CRLCL $@5 ELSE CRLOP . $@6 BODY CRLCL
+
+    $default  reduce using rule 33 ($@6)
+
+    $@6  go to state 152
+
+
+State 152
+
+   34 STMT: IF ROP COND $@4 RCL CRLOP BODY CRLCL $@5 ELSE CRLOP $@6 . BODY CRLCL
+
+    INC     shift, and go to state 4
+    DEC     shift, and go to state 5
+    ID      shift, and go to state 6
+    IF      shift, and go to state 7
+    STRUCT  shift, and go to state 8
+    INT     shift, and go to state 9
+    FLOAT   shift, and go to state 10
+    LONG    shift, and go to state 11
+    CHAR    shift, and go to state 12
+
+    CRLCL     reduce using rule 6 (BODY)
+    $default  reduce using rule 9 (DUMMY)
+
+    slst       go to state 99
+    BODY       go to state 153
+    E          go to state 14
+    DUMMY      go to state 15
+    STMT       go to state 16
+    VAR_DEC    go to state 17
+    TYPE       go to state 18
+    B          go to state 19
+    STRUCTDEC  go to state 20
+    PRE        go to state 21
+
+
+State 153
+
+   34 STMT: IF ROP COND $@4 RCL CRLOP BODY CRLCL $@5 ELSE CRLOP $@6 BODY . CRLCL
+
+    CRLCL  shift, and go to state 154
+
+
+State 154
+
+   34 STMT: IF ROP COND $@4 RCL CRLOP BODY CRLCL $@5 ELSE CRLOP $@6 BODY CRLCL .
+
+    $default  reduce using rule 34 (STMT)

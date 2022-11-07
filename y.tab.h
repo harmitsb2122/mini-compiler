@@ -56,30 +56,34 @@ extern int yydebug;
     NEQ = 262,
     LOR = 263,
     LAND = 264,
-    LTEQ = 265,
-    GTEQ = 266,
-    LT = 267,
-    GT = 268,
-    XOR = 269,
-    BOR = 270,
-    BAND = 271,
-    AEQ = 272,
-    INC = 273,
-    DEC = 274,
-    NUM = 275,
-    ID = 276,
-    IF = 277,
-    ELSE = 278,
-    STRUCT = 279,
-    INT = 280,
-    FLOAT = 281,
-    POINTER = 282,
-    CHAR = 283,
-    ARROP = 284,
-    ARRCL = 285,
-    CRLOP = 286,
-    CRLCL = 287,
-    UMINUS = 288
+    LNOT = 265,
+    LTEQ = 266,
+    GTEQ = 267,
+    LT = 268,
+    GT = 269,
+    XOR = 270,
+    BOR = 271,
+    BAND = 272,
+    AEQ = 273,
+    INC = 274,
+    DEC = 275,
+    NUM = 276,
+    ID = 277,
+    IF = 278,
+    ELSE = 279,
+    STRUCT = 280,
+    INT = 281,
+    FLOAT = 282,
+    LONG = 283,
+    POINTER = 284,
+    CHAR = 285,
+    ARROP = 286,
+    ARRCL = 287,
+    CRLOP = 288,
+    CRLCL = 289,
+    ROP = 290,
+    RCL = 291,
+    UMINUS = 292
   };
 #endif
 /* Tokens.  */
@@ -90,40 +94,44 @@ extern int yydebug;
 #define NEQ 262
 #define LOR 263
 #define LAND 264
-#define LTEQ 265
-#define GTEQ 266
-#define LT 267
-#define GT 268
-#define XOR 269
-#define BOR 270
-#define BAND 271
-#define AEQ 272
-#define INC 273
-#define DEC 274
-#define NUM 275
-#define ID 276
-#define IF 277
-#define ELSE 278
-#define STRUCT 279
-#define INT 280
-#define FLOAT 281
-#define POINTER 282
-#define CHAR 283
-#define ARROP 284
-#define ARRCL 285
-#define CRLOP 286
-#define CRLCL 287
-#define UMINUS 288
+#define LNOT 265
+#define LTEQ 266
+#define GTEQ 267
+#define LT 268
+#define GT 269
+#define XOR 270
+#define BOR 271
+#define BAND 272
+#define AEQ 273
+#define INC 274
+#define DEC 275
+#define NUM 276
+#define ID 277
+#define IF 278
+#define ELSE 279
+#define STRUCT 280
+#define INT 281
+#define FLOAT 282
+#define LONG 283
+#define POINTER 284
+#define CHAR 285
+#define ARROP 286
+#define ARRCL 287
+#define CRLOP 288
+#define CRLCL 289
+#define ROP 290
+#define RCL 291
+#define UMINUS 292
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 66 "prob1.y"
+#line 81 "prob1.y"
 
 	char string[100];
 
-#line 127 "y.tab.h"
+#line 135 "y.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

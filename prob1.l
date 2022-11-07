@@ -22,10 +22,12 @@ id {alpha}|({alpha}|{digit})+
 "int" {strcpy(yylval.string,yytext);return INT;}
 "float" {strcpy(yylval.string,yytext);return FLOAT;}
 "char" {strcpy(yylval.string,yytext);return CHAR;}
+"long" {strcpy(yylval.string,yytext);return LONG;}
 "==" {strcpy(yylval.string,yytext);return EQ;}
 "!=" {strcpy(yylval.string,yytext);return NEQ;}
 "||" {strcpy(yylval.string,yytext);return LOR;}
 "&&" {strcpy(yylval.string,yytext);return LAND;}
+"!" {strcpy(yylval.string,yytext);return LNOT;}
 "<=" {strcpy(yylval.string,yytext);return LTEQ;}
 ">=" {strcpy(yylval.string,yytext);return GTEQ;}
 "<" {strcpy(yylval.string,yytext);return LT;}
@@ -34,6 +36,8 @@ id {alpha}|({alpha}|{digit})+
 "]" {strcpy(yylval.string,yytext);return ARRCL;}
 "{" {strcpy(yylval.string,yytext);return CRLOP;}
 "}" {strcpy(yylval.string,yytext);return CRLCL;}
+"(" {strcpy(yylval.string,yytext);return ROP;}
+")" {strcpy(yylval.string,yytext);return RCL;}
 "^" {strcpy(yylval.string,yytext);return XOR;}
 "|" {strcpy(yylval.string,yytext);return BOR;}
 "&" {strcpy(yylval.string,yytext);return BAND;}
