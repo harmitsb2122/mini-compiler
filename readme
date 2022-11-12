@@ -24,3 +24,4 @@ Notes :
 - Scope checking is HANDLED.
 - Currently complex conditionals are HANDLED.
 - typecasting is HANDLED.
+- Data Types - char -> 1 byte ; int , float, pointer ->4 bytes each ; long -> 8 bytes.

@@ -332,7 +332,7 @@ COND1  : COND1 LT COND1 {
       | COND2
       ;
 
-COND2 : ANY CMP AFTER {
+COND2 : AFTER CMP AFTER {
                         strcpy($$,generateVariable());
                         char temp1[50];
                         char temp2[50];
@@ -346,7 +346,7 @@ COND2 : ANY CMP AFTER {
                         printf("%s :\n%s = 0\n",temp2,$$);
                         printf("%s :\n",temp3);
                       }
-      | ID ASSIGN AFTER {
+      | AFTER ASSIGN AFTER {
                         if(missingdeclaration($1))
                         {
                           printf( "error : var '%s' is not declared in the scope\n",$1);
@@ -367,7 +367,7 @@ COND2 : ANY CMP AFTER {
                           printf("%s :\n",temp3);
                         }
                       }
-      | LNOT ANY {
+      | LNOT AFTER {
                           strcpy($$,generateVariable());
                           char temp1[50];
                           char temp2[50];
@@ -495,6 +495,10 @@ REP     :  REP ',' NEXT      {
                                   {
                                     offset*=4;
                                   }
+                                  else if(!strcmp(temp_store,"long"))
+                                  {
+                                    offset*=8;
+                                  }
                                   else if(!strcmp(temp_store,"struct"))
                                   {
                                     offset*=1;
@@ -546,6 +550,10 @@ REP     :  REP ',' NEXT      {
                                     {
                                       offset*=4;
                                     } 
+                                    else if(!strcmp(temp_store,"long"))
+                                    {
+                                      offset*=8;
+                                    }
                                     else if(!strcmp(temp_store,"struct"))
                                     {
                                       offset*=1;
@@ -595,6 +603,10 @@ REP     :  REP ',' NEXT      {
                                   else if(!strcmp(temp_store,"pointer"))
                                   {
                                     offset*=4;
+                                  }
+                                  else if(!strcmp(temp_store,"long"))
+                                  {
+                                    offset*=8;
                                   }
                                   else if(!strcmp(temp_store,"struct"))
                                   {
@@ -647,6 +659,10 @@ REP     :  REP ',' NEXT      {
                                     {
                                       offset*=4;
                                     } 
+                                    else if(!strcmp(temp_store,"long"))
+                                    {
+                                      offset*=8;
+                                    }
                                     else if(!strcmp(temp_store,"struct"))
                                     {
                                       offset*=1;
@@ -768,6 +784,10 @@ INSSTR : TYPE NEXT  {
                                   else if(!strcmp($1,"pointer"))
                                   {
                                     offset*=4;
+                                  }
+                                  else if(!strcmp($1,"long"))
+                                  {
+                                    offset*=8;
                                   }
                                   else if(!strcmp($1,"struct"))
                                   {

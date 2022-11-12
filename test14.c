@@ -1,4 +1,4 @@
-int i ;
+long i ;
 int k ;
 int z ;
-i =  k + (long)z;
+i =  k + (int)z;
