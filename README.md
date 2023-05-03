@@ -1,6 +1,6 @@
-Instructions
+# Instructions
 
-Instructions to run
+## Instructions to run
 
 - Open terminal
 - Type: make fname=<filename> .A file parser would be created.
